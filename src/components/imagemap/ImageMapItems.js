@@ -10,6 +10,7 @@ import Icon from '../icon/Icon';
 import Scrollbar from '../common/Scrollbar';
 import CommonButton from '../common/CommonButton';
 import { SVGModal } from '../common';
+import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
 
 notification.config({
 	top: 80,
@@ -28,7 +29,46 @@ class ImageMapItems extends Component {
 		textSearch: '',
 		descriptors: {},
 		filteredDescriptors: [],
-		svgModalVisible: false,
+        svgModalVisible: false,
+        display: false,
+        fileLibraryList: [
+            {
+                "_id": 1,
+                "title": "Close Woman",
+                "size": 294880,
+                "fileName": "close-woman-hands-coding-html-260nw-1089903890.jpg",
+                "type": "image/jpeg",
+                "createdAt": new Date("2019-10-17T03:12:29.866Z"),
+                "thumbnailUrl": "https://image.shutterstock.com/image-photo/close-woman-hands-coding-html-260nw-1089903890.jpg"
+            },
+            {
+                "_id": 2,
+                "title": "Isometric 3D",
+                "size": 864483,
+                "fileName": "isometric-3d-teamwork-building-do-600w-1341632465.jpg",
+                "type": "image/jpeg",
+                "createdAt": new Date("2019-10-17T03:12:45.018Z"),
+                "thumbnailUrl": "https://image.shutterstock.com/image-vector/isometric-3d-teamwork-building-do-600w-1341632465.jpg"
+            },
+            {
+                "_id": 3,
+                "title": "Our new baby",
+                "size": 586458,
+                "fileName": "web-development-coding-programming-responsive-600w-1449924503.jpg",
+                "type": "image/jpeg",
+                "createdAt": new Date("2019-10-17T03:19:33.498Z"),
+                "thumbnailUrl": "https://image.shutterstock.com/image-vector/web-development-coding-programming-responsive-600w-1449924503.jpg"
+            },
+            {
+                "_id": 4,
+                "title": "My new car",
+                "size": 894665,
+                "fileName": "two-man-people-character-programmer-600w-1180783318.jpg",
+                "type": "image/jpeg",
+                "createdAt": new Date("2019-10-17T03:28:39.723Z"),
+                "thumbnailUrl": "https://image.shutterstock.com/image-vector/two-man-people-character-programmer-600w-1180783318.jpg"
+            }
+        ]
 	};
 
 	componentDidMount() {
@@ -107,7 +147,13 @@ class ImageMapItems extends Component {
 			if (item.option.superType === 'svg' && item.type === 'default') {
 				this.handlers.onSVGModalVisible(item.option);
 				return;
-			}
+            }
+            console.log("item added");
+            console.log("item", item);
+            if (item.type === 'image') {
+                this.setState({display: true});
+                this.forceUpdate();
+            }
 			canvasRef.handler.add(option, centered);
 		},
 		onAddSVG: (option, centered) => {
@@ -230,7 +276,6 @@ class ImageMapItems extends Component {
 			{items.map(item => this.renderItem(item))}
 		</Flex>
 	);
-
 	renderItem = (item, centered) =>
 		item.type === 'drawing' ? (
 			<div
@@ -261,10 +306,17 @@ class ImageMapItems extends Component {
 				{this.state.collapse ? null : <div className="rde-editor-items-item-text">{item.name}</div>}
 			</div>
 		);
-
+    uploadCallback = async (fileBase64, fileMeta) => {
+        return true;
+    }
+    deleteCallback = async (item) => {
+    }
+    selectCallback = (item) => {
+        this.setState({display: false});
+    }
 	render() {
 		const { descriptors } = this.props;
-		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption } = this.state;
+		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, display, fileLibraryList } = this.state;
 		const className = classnames('rde-editor-items', {
 			minimize: collapse,
 		});
@@ -324,6 +376,17 @@ class ImageMapItems extends Component {
 					onCancel={this.handlers.onSVGModalVisible}
 					option={svgOption}
 				/>
+                <ReactMediaLibrary
+                    show={display}
+                    onHide={() => {
+                        this.setState({display: false});
+                        this.forceUpdate();
+                    }}
+                    fileUploadCallback={this.uploadCallback}
+                    fileLibraryList={fileLibraryList}
+                    fileSelectCallback={this.selectCallback}
+                    fileDeleteCallback={this.deleteCallback}
+                />
 			</div>
 		);
 	}
