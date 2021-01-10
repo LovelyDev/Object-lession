@@ -4,6 +4,7 @@ import { Collapse, notification, Input, message } from 'antd';
 import { v4 } from 'uuid';
 import classnames from 'classnames';
 import i18n from 'i18next';
+import AWS from 'aws-sdk'
 
 import { Flex } from '../flex';
 import Icon from '../icon/Icon';
@@ -11,69 +12,50 @@ import Scrollbar from '../common/Scrollbar';
 import CommonButton from '../common/CommonButton';
 import { SVGModal } from '../common';
 import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
+import { s3 } from './config/aws';
 
 notification.config({
 	top: 80,
 	duration: 2,
 });
 
+const getThumbnailUrl = (s3, image) => {
+    return `http://s3-${s3.region}.amazonaws.com/${s3.bucketName}/${image}`;
+}
 class ImageMapItems extends Component {
+    constructor(props) {
+        super(props);
+        AWS.config.update({
+            accessKeyId: s3.accessKeyId,
+            secretAccessKey: s3.secretAccessKey
+        });
+        this.myBucket = new AWS.S3({
+            params: { Bucket: s3.bucketName},
+            region: s3.region,
+        });
+        this.myBucket1 = new AWS.S3({
+            params: { Bucket: s3.bucketName}
+        });
+        this.state = {
+            activeKey: [],
+            collapse: false,
+            textSearch: '',
+            descriptors: {},
+            filteredDescriptors: [],
+            svgModalVisible: false,
+            rmlDisplay: false,
+            fileLibraryList: [],
+            imageItem: null,
+            centered: null
+        };
+    }
 	static propTypes = {
 		canvasRef: PropTypes.any,
 		descriptors: PropTypes.object,
 	};
-
-	state = {
-		activeKey: [],
-		collapse: false,
-		textSearch: '',
-		descriptors: {},
-		filteredDescriptors: [],
-        svgModalVisible: false,
-        display: false,
-        fileLibraryList: [
-            {
-                "_id": 1,
-                "title": "Close Woman",
-                "size": 294880,
-                "fileName": "close-woman-hands-coding-html-260nw-1089903890.jpg",
-                "type": "image/jpeg",
-                "createdAt": new Date("2019-10-17T03:12:29.866Z"),
-                "thumbnailUrl": "https://image.shutterstock.com/image-photo/close-woman-hands-coding-html-260nw-1089903890.jpg"
-            },
-            {
-                "_id": 2,
-                "title": "Isometric 3D",
-                "size": 864483,
-                "fileName": "isometric-3d-teamwork-building-do-600w-1341632465.jpg",
-                "type": "image/jpeg",
-                "createdAt": new Date("2019-10-17T03:12:45.018Z"),
-                "thumbnailUrl": "https://image.shutterstock.com/image-vector/isometric-3d-teamwork-building-do-600w-1341632465.jpg"
-            },
-            {
-                "_id": 3,
-                "title": "Our new baby",
-                "size": 586458,
-                "fileName": "web-development-coding-programming-responsive-600w-1449924503.jpg",
-                "type": "image/jpeg",
-                "createdAt": new Date("2019-10-17T03:19:33.498Z"),
-                "thumbnailUrl": "https://image.shutterstock.com/image-vector/web-development-coding-programming-responsive-600w-1449924503.jpg"
-            },
-            {
-                "_id": 4,
-                "title": "My new car",
-                "size": 894665,
-                "fileName": "two-man-people-character-programmer-600w-1180783318.jpg",
-                "type": "image/jpeg",
-                "createdAt": new Date("2019-10-17T03:28:39.723Z"),
-                "thumbnailUrl": "https://image.shutterstock.com/image-vector/two-man-people-character-programmer-600w-1180783318.jpg"
-            }
-        ]
-	};
-
 	componentDidMount() {
 		const { canvasRef } = this.props;
-		this.waitForCanvasRender(canvasRef);
+        this.waitForCanvasRender(canvasRef);
 	}
 
 	UNSAFE_componentWillReceiveProps(nextProps) {
@@ -148,13 +130,13 @@ class ImageMapItems extends Component {
 				this.handlers.onSVGModalVisible(item.option);
 				return;
             }
-            console.log("item added");
-            console.log("item", item);
             if (item.type === 'image') {
-                this.setState({display: true});
+                this.getAllFromS3(s3);
+                this.setState({rmlDisplay: true, imageItem: item, centered});
                 this.forceUpdate();
+            } else {
+                canvasRef.handler.add(option, centered);
             }
-			canvasRef.handler.add(option, centered);
 		},
 		onAddSVG: (option, centered) => {
 			const { canvasRef } = this.props;
@@ -305,18 +287,93 @@ class ImageMapItems extends Component {
 				</span>
 				{this.state.collapse ? null : <div className="rde-editor-items-item-text">{item.name}</div>}
 			</div>
-		);
+        );
+    getAllFromS3 = (bucket) => {
+        const params = {
+            Bucket: bucket.bucketName
+        };
+        this.myBucket.listObjects(params, (err, data) => {
+            if (err) {} // an error occurred
+            else{
+				let mediaList = [];
+                data.Contents.forEach((object, i) => {
+                    const newFile = {
+                        "_id": i + 1,
+                        "title": object.Owner.DisplayName,
+                        "size": object.size,
+                        "fileName": object.Key,
+                        "type": "image/jpeg",
+                        "createdAt": new Date(),
+                        "thumbnailUrl": getThumbnailUrl(s3, object.Key)
+					}
+					mediaList.push(newFile);
+				})
+				this.setState({fileLibraryList: mediaList})
+                this.forceUpdate();
+            }
+        
+        })
+    }
+    uploadFileToS3 = (fileBase64, fileMeta) => {
+        const buf = Buffer.from(fileBase64.replace(/^data:image\/\w+;base64,/, ""),'base64');
+        const params = {
+            ACL: 'public-read',
+            Key: fileMeta.fileName,
+            ContentType: fileMeta.type,
+            Body: buf,
+            ContentEncoding: 'base64'
+        };
+        this.myBucket.putObject(params)
+            .on('httpUploadProgress', (evt) => {
+            })
+            .send((err) => {
+                if (err) {
+                } else {
+                    const { fileLibraryList } = this.state;
+                    let isDuplicated = false;
+                    for (let i = 0; i < fileLibraryList.length; i++) {
+                        const e = fileLibraryList[i];
+                        if (e.fileName === fileMeta.fileName) {
+                            isDuplicated = true;
+                            break;
+                        }
+                        
+                    }
+                    const newFile = {
+                        "_id": fileLibraryList.length + 1,
+                        "title": fileMeta.fileName,
+                        "size": fileMeta.size,
+                        "fileName": fileMeta.fileName,
+                        "type": "image/jpeg",
+                        "createdAt": new Date(),
+                        "thumbnailUrl": getThumbnailUrl(s3, fileMeta.fileName)
+                    }
+                    if (!isDuplicated) {
+                        this.setState({fileLibraryList: [...fileLibraryList, newFile]});
+                        this.forceUpdate();
+                    }
+                }
+            })
+        }
     uploadCallback = async (fileBase64, fileMeta) => {
+        this.uploadFileToS3(fileBase64, fileMeta);
         return true;
     }
     deleteCallback = async (item) => {
     }
     selectCallback = (item) => {
-        this.setState({display: false});
+        const { canvasRef } = this.props;
+        const { imageItem, centered } = this.state;
+        this.setState({rmlDisplay: false});
+        const id = v4();
+        let option = Object.assign({}, imageItem.option, { id });
+        option.src = item.thumbnailUrl;
+        canvasRef.handler.add(option, centered);
+        this.forceUpdate();
     }
 	render() {
 		const { descriptors } = this.props;
-		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, display, fileLibraryList } = this.state;
+		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, rmlDisplay, fileLibraryList } = this.state;
 		const className = classnames('rde-editor-items', {
 			minimize: collapse,
 		});
@@ -377,9 +434,9 @@ class ImageMapItems extends Component {
 					option={svgOption}
 				/>
                 <ReactMediaLibrary
-                    show={display}
+                    show={rmlDisplay}
                     onHide={() => {
-                        this.setState({display: false});
+                        this.setState({rmlDisplay: false});
                         this.forceUpdate();
                     }}
                     fileUploadCallback={this.uploadCallback}
