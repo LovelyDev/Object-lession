@@ -756,7 +756,7 @@ class Handler implements HandlerOptions {
 		}
 		if (onAdd && editable && !loaded) {
 			onAdd(createdObj);
-		}
+        }
 		return createdObj;
 	};
 

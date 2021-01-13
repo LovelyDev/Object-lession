@@ -33,9 +33,6 @@ class ImageMapItems extends Component {
             params: { Bucket: s3.bucketName},
             region: s3.region,
         });
-        this.myBucket1 = new AWS.S3({
-            params: { Bucket: s3.bucketName}
-        });
         this.state = {
             activeKey: [],
             collapse: false,
@@ -82,7 +79,11 @@ class ImageMapItems extends Component {
 			return true;
 		} else if (this.state.svgModalVisible !== nextState.svgModalVisible) {
 			return true;
-		}
+		} else if (this.props.canvasRef !== nextProps.canvasRef) {
+            const { canvasRef } = this.props;
+            this.detachEventListener(canvasRef);
+            this.attachEventListener(nextProps.canvasRef);
+        }
 		return false;
 	}
 
@@ -192,22 +193,22 @@ class ImageMapItems extends Component {
 		onDragStart: (e, item) => {
 			this.item = item;
 			const { target } = e;
-			target.classList.add('dragging');
+            target.classList.add('dragging');
 		},
 		onDragOver: e => {
 			if (e.preventDefault) {
 				e.preventDefault();
 			}
-			e.dataTransfer.dropEffect = 'copy';
+            e.dataTransfer.dropEffect = 'copy';
 			return false;
 		},
 		onDragEnter: e => {
 			const { target } = e;
-			target.classList.add('over');
+            target.classList.add('over');
 		},
 		onDragLeave: e => {
 			const { target } = e;
-			target.classList.remove('over');
+            target.classList.remove('over');
 		},
 		onDrop: e => {
 			e = e || window.event;
@@ -216,7 +217,7 @@ class ImageMapItems extends Component {
 			}
 			if (e.stopPropagation) {
 				e.stopPropagation();
-			}
+            }
 			const { layerX, layerY } = e;
 			const dt = e.dataTransfer;
 			if (dt.types.length && dt.types[0] === 'Files') {
@@ -249,7 +250,7 @@ class ImageMapItems extends Component {
 		},
 		onDragEnd: e => {
 			this.item = null;
-			e.target.classList.remove('dragging');
+            e.target.classList.remove('dragging');
 		},
 	};
 

@@ -36,28 +36,44 @@ class Page extends Component {
 class PageListPanel extends Component {
     constructor(props) {
         super(props);
+        const { onPanelStateChange } = this.props;
         const id = v4();
         this.state = {
             pages: [{id}],
             curPageId: id
         }
+        onPanelStateChange('init', id);
     }
     onPageClick = (id) => {
+        const { onPanelStateChange } = this.props;
         this.setState({curPageId: id});
+        onPanelStateChange('page-change', id);
     }
     onDeleteClick = (id) => {
+        const { onPanelStateChange } = this.props;
         const { pages, curPageId } = this.state;
+        let value = curPageId;
         this.setState({pages: pages.filter((page, i) => {
             if (page.id !== id) return true;
             if (id === curPageId) {
                 if (i === (pages.length - 1)) {
                     this.setState({curPageId: pages[i - 1].id});
+                    value = pages[i - 1].id;
                 } else {
                     this.setState({curPageId: pages[i + 1].id});
+                    value = pages[i + 1].id;
                 }
             }
             return false;
         })});
+        onPanelStateChange('delete', value);
+    }
+    onAddClick = () => {
+        const { onPanelStateChange } = this.props;
+        const id = v4();
+        const { pages } = this.state;
+        this.setState({ pages: [...pages, {id}] });
+        onPanelStateChange('add', id);
     }
     getPanelState = () => this.state;
     render() {
@@ -71,11 +87,7 @@ class PageListPanel extends Component {
                                 shape="circle"
                                 icon="plus"
                                 tooltipTitle={i18n.t('action.add')}
-                                onClick={() => {
-                                    const id = v4();
-                                    const { pages } = this.state;
-                                    this.setState({ pages: [...pages, {id}] });
-                                }}
+                                onClick={this.onAddClick}
                             />
                         </div>
                         <div>
