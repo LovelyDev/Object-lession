@@ -16,6 +16,7 @@ import '../../styles/index.less';
 import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
+import PageListPanel from './PageListPanel/PageListPanel';
 
 const propertiesToInclude = [
 	'id',
@@ -730,6 +731,7 @@ class ImageMapEditor extends Component {
 					canvasRef={this.canvasRef}
 					descriptors={descriptors}
 				/>
+                <PageListPanel />
 				<div className="rde-editor-canvas-container">
 					<div className="rde-editor-header-toolbar">
 						<ImageMapHeaderToolbar
