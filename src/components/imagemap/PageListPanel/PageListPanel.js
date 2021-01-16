@@ -10,25 +10,36 @@ class Page extends Component {
         super(props);
     }
     render() {
-        const { id, active, onPageClick, onDeleteClick, getPanelState } = this.props;
-        const { pages } = getPanelState();
+        const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick } = this.props;
+        const img = getPreviewImgById(id);
         return <div className="panel-list-item">
             <div
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
             >
-                {id}
+                <img className="panel-list-item-page-preview" src={img} />
             </div>
-            {
-                (pages.length !== 1) &&
-                <CommonButton
-                    className="rde-action-btn"
-                    shape="circle"
-                    icon="trash"
-                    tooltipTitle={i18n.t('action.delete')}
-                    onClick={() => onDeleteClick(id)}
-                />
-            }
+            <div className="panel-list-item-btn-group">
+                {(pageCount !== 1) &&
+                    <CommonButton
+                        className="rde-action-btn"
+                        shape="circle"
+                        icon="trash"
+                        tooltipTitle={i18n.t('action.delete')}
+                        onClick={() => onDeleteClick(id)}
+                    />
+                }
+                {active &&
+                    <CommonButton
+                        className="rde-action-btn"
+                        shape="circle"
+                        icon="clone"
+                        tooltipTitle={i18n.t('action.duplicate')}
+                        onClick={() => onDuplicateClick(id)}
+                    />
+                }
+            </div>
+            
         </div>
     }
 }
@@ -37,47 +48,27 @@ class PageListPanel extends Component {
     constructor(props) {
         super(props);
         const { onPanelStateChange } = this.props;
-        const id = v4();
-        this.state = {
-            pages: [{id}],
-            curPageId: id
-        }
-        onPanelStateChange('init', id);
+        onPanelStateChange('init');
     }
     onPageClick = (id) => {
         const { onPanelStateChange } = this.props;
-        this.setState({curPageId: id});
         onPanelStateChange('page-change', id);
     }
     onDeleteClick = (id) => {
         const { onPanelStateChange } = this.props;
-        const { pages, curPageId } = this.state;
-        let value = curPageId;
-        this.setState({pages: pages.filter((page, i) => {
-            if (page.id !== id) return true;
-            if (id === curPageId) {
-                if (i === (pages.length - 1)) {
-                    this.setState({curPageId: pages[i - 1].id});
-                    value = pages[i - 1].id;
-                } else {
-                    this.setState({curPageId: pages[i + 1].id});
-                    value = pages[i + 1].id;
-                }
-            }
-            return false;
-        })});
-        onPanelStateChange('delete', value);
+        onPanelStateChange('delete', id);
     }
     onAddClick = () => {
         const { onPanelStateChange } = this.props;
-        const id = v4();
-        const { pages } = this.state;
-        this.setState({ pages: [...pages, {id}] });
-        onPanelStateChange('add', id);
+        onPanelStateChange('add');
     }
-    getPanelState = () => this.state;
+    onDuplicateClick = (id) => {
+        const { onPanelStateChange } = this.props;
+        onPanelStateChange('duplicate', id);
+    }
     render() {
-        const { pages, curPageId } = this.state;
+        const { pages, curPageId } = this.props;
+        const { getPreviewImgById } = this.props;
         return <div className="rde-editor-items panel-list">
                 <Scrollbar>
                     <div>
@@ -98,7 +89,9 @@ class PageListPanel extends Component {
                                         active={ page.id === curPageId }
                                         onPageClick={this.onPageClick}
                                         onDeleteClick={this.onDeleteClick}
-                                        getPanelState={this.getPanelState}
+                                        pageCount={pages.length}
+                                        getPreviewImgById={getPreviewImgById}
+                                        onDuplicateClick={this.onDuplicateClick}
                                     />)
                             }
                         </div>

@@ -28,7 +28,7 @@ class ImageMapPreview extends Component {
 						style={{ overvlow: 'hidden', display: 'flex', flex: '1', height: '100%' }}
 					>
 						<Canvas
-							editable={false}
+							editable={true}
 							className="rde-canvas"
 							canvasOption={{
 								backgroundColor: '#f3f3f3',

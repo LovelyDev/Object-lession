@@ -104,6 +104,7 @@ class ImageMapItems extends Component {
 	};
 
 	attachEventListener = canvas => {
+		if (!canvas) return;
 		canvas.canvas.wrapperEl.addEventListener('dragenter', this.events.onDragEnter, false);
 		canvas.canvas.wrapperEl.addEventListener('dragover', this.events.onDragOver, false);
 		canvas.canvas.wrapperEl.addEventListener('dragleave', this.events.onDragLeave, false);
@@ -111,6 +112,7 @@ class ImageMapItems extends Component {
 	};
 
 	detachEventListener = canvas => {
+		if (!canvas) return;
 		canvas.canvas.wrapperEl.removeEventListener('dragenter', this.events.onDragEnter);
 		canvas.canvas.wrapperEl.removeEventListener('dragover', this.events.onDragOver);
 		canvas.canvas.wrapperEl.removeEventListener('dragleave', this.events.onDragLeave);

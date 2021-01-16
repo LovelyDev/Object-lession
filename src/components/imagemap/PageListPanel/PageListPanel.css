@@ -41,3 +41,13 @@
 .panel-header .rde-action-btn {
     margin-right: 10px;
 }
+
+.panel-list-item-page-preview {
+    width: 100%;
+    height: 100%;
+}
+
+.panel-list-item-btn-group {
+    display: flex;
+    flex-direction: column;
+}

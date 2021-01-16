@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Badge, Button, Popconfirm, Menu } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
+import { v4 } from 'uuid';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -93,7 +94,7 @@ class ImageMapEditor extends Component {
             descriptors: {},
             objects: undefined,
             canvasRefs: [{id: 0, canvasRef: null}],
-            curCanvasRefId: null
+            curCanvasRefId: 0
         };
     }
 	
@@ -521,22 +522,27 @@ class ImageMapEditor extends Component {
 						}
 					};
 					reader.onload = e => {
-						const { objects, animations, styles, dataSources } = JSON.parse(e.target.result);
+						const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
 						this.setState({
 							animations,
 							styles,
-							dataSources,
+							dataSources
 						});
-						if (objects) {
-							this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.clear(true);
-							const data = objects.filter(obj => {
-								if (!obj.id) {
-									return false;
-								}
-								return true;
+						if (objectsList) {
+							const newCanvasRefs = objectsList.map((page, i) => {
+								const data = page.objects.filter(obj => {
+									if (!obj.id) {
+										return false;
+									}
+									return true;
+								});
+								return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
 							});
-							this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.importJSON(data);
+							this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
 						}
+						setTimeout(() => {
+							this.forceUpdate();
+						}, 500);
 					};
 					reader.onloadend = () => {
 						this.showLoading(false);
@@ -562,15 +568,19 @@ class ImageMapEditor extends Component {
 		},
 		onDownload: () => {
 			this.showLoading(true);
-			const objects = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.exportJSON().filter(obj => {
-				if (!obj.id) {
-					return false;
-				}
-				return true;
-			});
-			const { animations, styles, dataSources } = this.state;
+			const { canvasRefs } = this.state;
+			const objectsList = canvasRefs.map(canvasRef => {
+				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
+					if (!obj.id) {
+						return false;
+					}
+					return true;
+				});
+				return {id: canvasRef.id, objects};
+			})
+			const { animations, styles, dataSources, curCanvasRefId } = this.state;
 			const exportDatas = {
-				objects,
+				objectsList,
 				animations,
 				styles,
 				dataSources,
@@ -642,16 +652,50 @@ class ImageMapEditor extends Component {
     
     onPanelStateChange = (type, value) => {
         if (type === 'init') {
-            this.setState({canvasRefs: [{id: value, canvasRef: null}], curCanvasRefId: value});
+			const id = v4();
+            this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id});
         } else if (type === 'page-change') {
             this.setState({curCanvasRefId: value});
         } else if (type === 'add') {
+			const id = v4();
             const { canvasRefs } = this.state;
-            this.setState({canvasRefs: [...canvasRefs, {id: value, canvasRef: null}]})
+            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null}]})
         } else if (type === 'delete') {
-            this.setState({curCanvasRefId: value});
-        }
-        this.forceUpdate();
+			const id = value;
+			const { canvasRefs, curCanvasRefId } = this.state;
+            this.setState({canvasRefs: canvasRefs.filter((canvasRef, i) => {
+				if (canvasRef.id !== id) return true;
+				if (id === curCanvasRefId) {
+					if (i === (canvasRefs.length - 1)) {
+						this.setState({curCanvasRefId: canvasRefs[i - 1].id});
+					} else {
+						this.setState({curCanvasRefId: canvasRefs[i + 1].id});
+					}
+				}
+				return false; 
+			})});
+        } else if (type === 'duplicate') {
+			const { canvasRefs } = this.state;
+			let newCanvasRefs = [];
+			for (let i = 0; i < canvasRefs.length; i++) {
+				const e = canvasRefs[i];
+				newCanvasRefs.push(e);
+				if (value === e.id) {
+					const id = v4();
+					const objects = e.canvasRef.handler.exportJSON().filter(obj => {
+						if (!obj.id) {
+							return false;
+						}
+						return true;
+					});
+					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects});
+				}
+			}
+			this.setState({canvasRefs: [...newCanvasRefs]});
+		}
+		setTimeout(() => {
+			this.forceUpdate();
+		}, 300);
     }
 
     getCanvasRefById = (id) => {
@@ -666,6 +710,20 @@ class ImageMapEditor extends Component {
         }
         return res;
     }
+
+    getPreviewImgById = (id) => {
+        const { canvasRefs } = this.state;
+        let res = null;
+        for (let i = 0; i < canvasRefs.length; i++) {
+            const e = canvasRefs[i];
+            if (e.id === id) {
+                res = e.canvasRef ? e.canvasRef.canvas.toDataURL("image/png") : null;
+				break;
+            }
+        }
+        return res;
+    }
+
 	render() {
 		const {
 			preview,
@@ -679,9 +737,9 @@ class ImageMapEditor extends Component {
 			editing,
 			descriptors,
             objects,
-            canvasRefs,
             curCanvasRefId
 		} = this.state;
+		let { canvasRefs } = this.state;
 		const {
 			onAdd,
 			onRemove,
@@ -765,7 +823,12 @@ class ImageMapEditor extends Component {
 					canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
 					descriptors={descriptors}
 				/>
-                <PageListPanel onPanelStateChange={this.onPanelStateChange}/>
+                <PageListPanel
+					onPanelStateChange={this.onPanelStateChange}
+					getPreviewImgById={this.getPreviewImgById}
+					pages={canvasRefs}
+					curPageId={curCanvasRefId}
+				/>
 				<div className="rde-editor-canvas-container">
 					<div className="rde-editor-header-toolbar">
 						<ImageMapHeaderToolbar
@@ -781,12 +844,19 @@ class ImageMapEditor extends Component {
 						className="rde-editor-canvas"
 					>
                     {
-                        canvasRefs.map(canvasRef => <Canvas
+                        canvasRefs.map(canvasRef => {
+						const { isDuplicated, objects } = canvasRef;
+						let props = {};
+						if(isDuplicated) {
+							props.onLoad = handler => handler.importJSON(objects)
+						}
+						return <Canvas
 							ref={c => {
 								canvasRef.canvasRef = c;
 							}}
+							key={canvasRef.id}
                             className="rde-canvas"
-                            style={canvasRef.id === curCanvasRefId ? {display: "block"} : {display: "none"}}
+                            style={canvasRef.id === curCanvasRefId ? {zIndex: 0} : {zIndex: -1}}
 							minZoom={30}
 							maxZoom={500}
 							objectOption={defaultOption}
@@ -803,7 +873,8 @@ class ImageMapEditor extends Component {
 							keyEvent={{
 								transaction: true,
 							}}
-						/>)
+							{...props}
+						/>})
                     }
 					</div>
 					<div className="rde-editor-footer-toolbar">
