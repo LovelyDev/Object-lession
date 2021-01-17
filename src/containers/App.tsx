@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Helmet } from 'react-helmet';
+import axios from 'axios';
 
 import ImageMapEditor from '../components/imagemap/ImageMapEditor';
 import WorkflowEditor from '../components/workflow/WorkflowEditor';
@@ -7,34 +8,78 @@ import Title from './Title';
 import FlowEditor from '../components/flow/FlowEditor';
 import FlowContainer from './FlowContainer';
 import HexGrid from '../components/hexgrid/HexGrid';
+import Projects from '../components/projects/Projects';
 
-type EditorType = 'imagemap' | 'workflow' | 'flow' | 'hexgrid';
+type EditorType = 'imagemap' | 'workflow' | 'flow' | 'hexgrid' | 'projects';
 
 interface IState {
-	activeEditor?: EditorType;
+    activeEditor?: EditorType;
+    projectId: any;
+    projects: any;
 }
 
 class App extends Component<any, IState> {
 	state: IState = {
-		activeEditor: 'imagemap',
+        activeEditor: 'imagemap',
+        projectId: null,
+        projects: [
+            { id: 1, name: "First Project" },
+            { id: 2, name: "Second Project" },
+            { id: 3, name: "Third Project" }
+        ]
 	};
 
 	onChangeMenu = ({ key }) => {
+        if (key === 'projects') {
+            axios.get("https://api.mathcurious.com/projects")
+            .then(res => {
+                this.setState({projects: res.data});
+            })
+        }
 		this.setState({
 			activeEditor: key,
 		});
-	};
+    };
+    
+    onProjectClick = (id) => () => {
+        this.setState({
+            activeEditor: "imagemap",
+            projectId: id
+        })
+    }
+
+    onAddProjectClick = (projectName) => () => {
+        axios.post("https://api.mathcurious.com/projects",
+        {
+            name: projectName
+        })
+        .then(res => {
+            const { projects } = this.state;
+            this.setState({projects: [...projects, res.data]});
+        })
+    }
 
 	renderEditor = (activeEditor: EditorType) => {
+        const { projects, projectId } = this.state;
+        let props = {};
+        if (projectId) {
+            props = {projectId}
+        }
 		switch (activeEditor) {
 			case 'imagemap':
-				return <ImageMapEditor />;
+				return <ImageMapEditor {...props}/>;
 			case 'workflow':
 				return <WorkflowEditor />;
 			case 'flow':
 				return <FlowEditor />;
 			case 'hexgrid':
-				return <HexGrid />;
+                return <HexGrid />;
+            case 'projects':
+                return <Projects
+                    projects={projects}
+                    onProjectClick={this.onProjectClick}
+                    onAddProjectClick={this.onAddProjectClick}
+                    />;
 		}
 	};
 

@@ -3,6 +3,7 @@ import { Badge, Button, Popconfirm, Menu } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
+import axios from 'axios';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -114,7 +115,41 @@ class ImageMapEditor extends Component {
 		this.setState({
 			selectedItem: null,
 		});
-		this.shortcutHandlers.esc();
+        this.shortcutHandlers.esc();
+        const { projectId } = this.props;
+        if (projectId) {
+            this.showLoading(true);
+            this.forceUpdate();
+            axios.get(`https://api.mathcurious.com/projects/${projectId}`)
+            .then(res => {
+                const { project_json } = res.data;
+                const { objectsList, animations, styles, dataSources } = project_json;
+                this.setState({
+                    animations,
+                    styles,
+                    dataSources
+                });
+                if (objectsList) {
+                    const newCanvasRefs = objectsList.map((page, i) => {
+                        const data = page.objects.filter(obj => {
+                            if (!obj.id) {
+                                return false;
+                            }
+                            return true;
+                        });
+                        return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
+                    });
+                    this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
+                } else {
+                    const id = v4();
+                    this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id})
+                }
+                setTimeout(() => {
+                    this.showLoading(false);
+                    this.forceUpdate();
+                }, 500);
+            })
+        }
 	}
 
 	canvasHandlers = {
@@ -621,7 +656,40 @@ class ImageMapEditor extends Component {
 		},
 		onSaveImage: () => {
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.saveCanvasImage();
-		},
+        },
+        onSaveProject: () => {
+            this.showLoading(true);
+			const { canvasRefs } = this.state;
+			const objectsList = canvasRefs.map(canvasRef => {
+				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
+					if (!obj.id) {
+						return false;
+					}
+					return true;
+				});
+				return {id: canvasRef.id, objects};
+			})
+			const { animations, styles, dataSources, curCanvasRefId } = this.state;
+			const exportDatas = {
+				objectsList,
+				animations,
+				styles,
+				dataSources,
+            };
+            const { projectId } = this.props;
+            if (!projectId) {
+                this.showLoading(false);
+                return;
+            }
+            axios.put(`https://api.mathcurious.com/projects/${projectId}`, {
+                project_json: exportDatas
+            })
+            .then(res => {
+                this.showLoading(false);
+                alert("Save project successfully");
+            })
+            
+        }
 	};
 
 	shortcutHandlers = {
@@ -759,10 +827,20 @@ class ImageMapEditor extends Component {
 			onChangeAnimations,
 			onChangeStyles,
 			onChangeDataSources,
-			onSaveImage,
+            onSaveImage,
+            onSaveProject
         } = this.handlers;
 		const action = (
 			<React.Fragment>
+                <CommonButton
+					className="rde-action-btn"
+					shape="circle"
+                    icon="save"
+                    disabled={!this.props.projectId}
+					tooltipTitle={i18n.t('action.save')}
+					onClick={onSaveProject}
+					tooltipPlacement="bottomRight"
+				/>
 				<CommonButton
 					className="rde-action-btn"
 					shape="circle"

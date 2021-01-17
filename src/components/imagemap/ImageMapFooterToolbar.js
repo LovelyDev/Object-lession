@@ -39,10 +39,12 @@ class ImageMapFooterToolbar extends Component {
 	};
 
 	attachEventListener = canvasRef => {
+        if (!canvasRef) return;
 		canvasRef.canvas.wrapperEl.addEventListener('keydown', this.events.keydown, false);
 	};
 
 	detachEventListener = canvasRef => {
+        if (!canvasRef) return;
 		canvasRef.canvas.wrapperEl.removeEventListener('keydown', this.events.keydown);
 	};
 
@@ -68,6 +70,7 @@ class ImageMapFooterToolbar extends Component {
 
 	events = {
 		keydown: e => {
+            if (!this.props.canvasRef) return false;
 			if (this.props.canvasRef.canvas.wrapperEl !== document.activeElement) {
 				return false;
 			}

@@ -86,6 +86,7 @@ class PageListPanel extends Component {
                                 pages.map(page =>
                                     <Page
                                         id={page.id}
+                                        key={page.id}
                                         active={ page.id === curPageId }
                                         onPageClick={this.onPageClick}
                                         onDeleteClick={this.onDeleteClick}
