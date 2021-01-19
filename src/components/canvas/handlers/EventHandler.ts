@@ -419,7 +419,13 @@ class EventHandler {
 				} else {
 					this.handler.drawingHandler.arrow.addPoint(event);
 				}
-			}
+			} else if (this.handler.interactionMode === 'photspot') {
+                if (target && this.handler.pointArray.length && target.id === this.handler.pointArray[0].id) {
+					this.handler.drawingHandler.photspot.generate(this.handler.pointArray);
+				} else {
+					this.handler.drawingHandler.photspot.addPoint(event);
+				}
+            }
 		}
 	};
 
@@ -479,6 +485,20 @@ class EventHandler {
 				this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
 			}
 			this.handler.canvas.requestRenderAll();
+		} else if (this.handler.interactionMode === 'photspot') {
+			if (this.handler.activeLine && this.handler.activeLine.class === 'line') {
+				const pointer = this.handler.canvas.getPointer(event.e);
+				this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
+				const points = this.handler.activeShape.get('points');
+				points[this.handler.pointArray.length] = {
+					x: pointer.x,
+					y: pointer.y,
+				};
+				this.handler.activeShape.set({
+					points,
+				});
+				this.handler.canvas.requestRenderAll();
+			}
 		}
 		return;
 	};
@@ -535,16 +555,19 @@ class EventHandler {
 	 * @param {FabricEvent} opt
 	 */
 	public selection = (opt: FabricEvent) => {
-		const { onSelect, activeSelectionOption } = this.handler;
+        const { onSelect, activeSelectionOption } = this.handler;
+        console.log("eventhandler selection", onSelect, activeSelectionOption);
 		const target = opt.target as FabricObject<fabric.ActiveSelection>;
 		if (target && target.type === 'activeSelection') {
 			target.set({
 				...activeSelectionOption,
 			});
-		}
+        }
+        console.log("eventhandler selection target", target);
 		if (onSelect) {
-			onSelect(target);
-		}
+            console.log("selection onSelect is called");
+            onSelect(target);
+        }
 	};
 
 	/**

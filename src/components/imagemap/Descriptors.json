@@ -176,6 +176,39 @@
 				"name": "New arrow"
 			}
 		}
+    ],
+    "HOTSPOT": [
+		{
+			"name": "Rectangle HotSpot",
+			"description": "",
+			"type": "hotspot",
+			"icon": {
+				"prefix": "far",
+				"name": "square"
+			},
+			"option": {
+				"type": "rhotspot",
+				"width": 40,
+                "height": 40,
+                "fill": "rgba(0,0,0,0)",
+                "stroke": "black",
+                "strokeWidth": 5,
+				"name": "New hotspot"
+			}
+		},
+		{
+			"name": "Polygon HotSpot",
+			"description": "",
+			"type": "hotspot",
+			"icon": {
+				"prefix": "fas",
+				"name": "draw-polygon"
+			},
+			"option": {
+				"type": "photspot",
+                "name": "New hotspot"
+			}
+		}
 	],
 	"ELEMENT": [
 		{

@@ -397,7 +397,7 @@ class Handler implements HandlerOptions {
 			objects.forEach(obj => (this.objectMap[obj.id] = obj));
 		} else {
 			this.objectMap = {};
-		}
+        }
 		return objects;
 	};
 

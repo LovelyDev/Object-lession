@@ -63,7 +63,17 @@ const CanvasObject: CanvasObjectSchema = {
 				...option,
 				perPixelTargetFind: true,
 			}),
-	},
+    },
+    rhotspot: {
+        create: (option: any) => new fabric.Rect(option),
+    },
+    photspot: {
+		create: ({ points, ...option }: { points: any }) =>
+			new fabric.Polygon(points, {
+				...option,
+				perPixelTargetFind: true,
+			}),
+    },
 	line: {
 		create: ({ points, ...option }: { points: any }) => new Line(points, option),
 	},

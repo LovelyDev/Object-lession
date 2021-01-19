@@ -178,14 +178,18 @@ class ImageMapEditor extends Component {
 				});
 				this.setState({
 					selectedItem: target,
-				});
+                });
 				return;
 			}
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.getObjects().forEach(obj => {
 				if (obj) {
 					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.animationHandler.resetAnimation(obj, true);
 				}
-			});
+            });
+            if (target && typeof target._objects !== undefined) {
+                this.setState({ selectedItem: target._objects });
+                return ;
+            }
 			this.setState({
 				selectedItem: null,
 			});
@@ -195,7 +199,7 @@ class ImageMapEditor extends Component {
 			if (!editing) {
 				this.changeEditing(true);
 			}
-			this.canvasHandlers.onSelect(null);
+            this.canvasHandlers.onSelect(null);
 		},
 		onModified: debounce(() => {
 			const { editing } = this.state;
@@ -613,7 +617,7 @@ class ImageMapEditor extends Component {
 				});
 				return {id: canvasRef.id, objects};
 			})
-			const { animations, styles, dataSources, curCanvasRefId } = this.state;
+			const { animations, styles, dataSources } = this.state;
 			const exportDatas = {
 				objectsList,
 				animations,
@@ -806,7 +810,7 @@ class ImageMapEditor extends Component {
 			descriptors,
             objects,
             curCanvasRefId
-		} = this.state;
+        } = this.state;
 		let { canvasRefs } = this.state;
 		const {
 			onAdd,

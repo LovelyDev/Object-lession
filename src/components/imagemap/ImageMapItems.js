@@ -136,10 +136,10 @@ class ImageMapItems extends Component {
             if (item.type === 'image') {
                 this.getAllFromS3(s3);
                 this.setState({rmlDisplay: true, imageItem: item, centered});
-                this.forceUpdate();
             } else {
                 canvasRef.handler.add(option, centered);
             }
+            this.forceUpdate();
 		},
 		onAddSVG: (option, centered) => {
 			const { canvasRef } = this.props;
@@ -148,7 +148,7 @@ class ImageMapItems extends Component {
 		},
 		onDrawingItem: item => {
 			const { canvasRef } = this.props;
-			if (canvasRef.handler.interactionMode === 'polygon') {
+			if (canvasRef.handler.interactionMode === 'polygon' || canvasRef.handler.interactionMode === 'photspot') {
 				message.info('Already drawing');
 				return;
 			}
@@ -156,7 +156,9 @@ class ImageMapItems extends Component {
 				canvasRef.handler.drawingHandler.line.init();
 			} else if (item.option.type === 'arrow') {
 				canvasRef.handler.drawingHandler.arrow.init();
-			} else {
+            } else if (item.option.type === 'photspot') {
+                canvasRef.handler.drawingHandler.photspot.init();
+            } else {
 				canvasRef.handler.drawingHandler.polygon.init();
 			}
 		},
@@ -262,7 +264,7 @@ class ImageMapItems extends Component {
 		</Flex>
 	);
 	renderItem = (item, centered) =>
-		item.type === 'drawing' ? (
+		(item.type === 'drawing' || item.option.type === 'photspot') ? (
 			<div
 				key={item.name}
 				draggable
