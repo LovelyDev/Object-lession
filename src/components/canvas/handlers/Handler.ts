@@ -397,7 +397,7 @@ class Handler implements HandlerOptions {
 			objects.forEach(obj => (this.objectMap[obj.id] = obj));
 		} else {
 			this.objectMap = {};
-		}
+        }
 		return objects;
 	};
 
@@ -756,7 +756,7 @@ class Handler implements HandlerOptions {
 		}
 		if (onAdd && editable && !loaded) {
 			onAdd(createdObj);
-		}
+        }
 		return createdObj;
 	};
 

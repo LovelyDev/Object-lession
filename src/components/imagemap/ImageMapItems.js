@@ -4,36 +4,55 @@ import { Collapse, notification, Input, message } from 'antd';
 import { v4 } from 'uuid';
 import classnames from 'classnames';
 import i18n from 'i18next';
+import AWS from 'aws-sdk'
 
 import { Flex } from '../flex';
 import Icon from '../icon/Icon';
 import Scrollbar from '../common/Scrollbar';
 import CommonButton from '../common/CommonButton';
 import { SVGModal } from '../common';
+import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
+import { s3 } from './config/aws';
 
 notification.config({
 	top: 80,
 	duration: 2,
 });
 
+const getThumbnailUrl = (s3, image) => {
+    return `http://s3-${s3.region}.amazonaws.com/${s3.bucketName}/${image}`;
+}
 class ImageMapItems extends Component {
+    constructor(props) {
+        super(props);
+        AWS.config.update({
+            accessKeyId: s3.accessKeyId,
+            secretAccessKey: s3.secretAccessKey
+        });
+        this.myBucket = new AWS.S3({
+            params: { Bucket: s3.bucketName},
+            region: s3.region,
+        });
+        this.state = {
+            activeKey: [],
+            collapse: false,
+            textSearch: '',
+            descriptors: {},
+            filteredDescriptors: [],
+            svgModalVisible: false,
+            rmlDisplay: false,
+            fileLibraryList: [],
+            imageItem: null,
+            centered: null
+        };
+    }
 	static propTypes = {
 		canvasRef: PropTypes.any,
 		descriptors: PropTypes.object,
 	};
-
-	state = {
-		activeKey: [],
-		collapse: false,
-		textSearch: '',
-		descriptors: {},
-		filteredDescriptors: [],
-		svgModalVisible: false,
-	};
-
 	componentDidMount() {
 		const { canvasRef } = this.props;
-		this.waitForCanvasRender(canvasRef);
+        this.waitForCanvasRender(canvasRef);
 	}
 
 	UNSAFE_componentWillReceiveProps(nextProps) {
@@ -60,7 +79,11 @@ class ImageMapItems extends Component {
 			return true;
 		} else if (this.state.svgModalVisible !== nextState.svgModalVisible) {
 			return true;
-		}
+		} else if (this.props.canvasRef !== nextProps.canvasRef) {
+            const { canvasRef } = this.props;
+            this.detachEventListener(canvasRef);
+            this.attachEventListener(nextProps.canvasRef);
+        }
 		return false;
 	}
 
@@ -81,6 +104,7 @@ class ImageMapItems extends Component {
 	};
 
 	attachEventListener = canvas => {
+		if (!canvas) return;
 		canvas.canvas.wrapperEl.addEventListener('dragenter', this.events.onDragEnter, false);
 		canvas.canvas.wrapperEl.addEventListener('dragover', this.events.onDragOver, false);
 		canvas.canvas.wrapperEl.addEventListener('dragleave', this.events.onDragLeave, false);
@@ -88,6 +112,7 @@ class ImageMapItems extends Component {
 	};
 
 	detachEventListener = canvas => {
+		if (!canvas) return;
 		canvas.canvas.wrapperEl.removeEventListener('dragenter', this.events.onDragEnter);
 		canvas.canvas.wrapperEl.removeEventListener('dragover', this.events.onDragOver);
 		canvas.canvas.wrapperEl.removeEventListener('dragleave', this.events.onDragLeave);
@@ -107,8 +132,14 @@ class ImageMapItems extends Component {
 			if (item.option.superType === 'svg' && item.type === 'default') {
 				this.handlers.onSVGModalVisible(item.option);
 				return;
-			}
-			canvasRef.handler.add(option, centered);
+            }
+            if (item.type === 'image') {
+                this.getAllFromS3(s3);
+                this.setState({rmlDisplay: true, imageItem: item, centered});
+            } else {
+                canvasRef.handler.add(option, centered);
+            }
+            this.forceUpdate();
 		},
 		onAddSVG: (option, centered) => {
 			const { canvasRef } = this.props;
@@ -117,7 +148,7 @@ class ImageMapItems extends Component {
 		},
 		onDrawingItem: item => {
 			const { canvasRef } = this.props;
-			if (canvasRef.handler.interactionMode === 'polygon') {
+			if (canvasRef.handler.interactionMode === 'polygon' || canvasRef.handler.interactionMode === 'photspot') {
 				message.info('Already drawing');
 				return;
 			}
@@ -125,7 +156,9 @@ class ImageMapItems extends Component {
 				canvasRef.handler.drawingHandler.line.init();
 			} else if (item.option.type === 'arrow') {
 				canvasRef.handler.drawingHandler.arrow.init();
-			} else {
+            } else if (item.option.type === 'photspot') {
+                canvasRef.handler.drawingHandler.photspot.init();
+            } else {
 				canvasRef.handler.drawingHandler.polygon.init();
 			}
 		},
@@ -164,22 +197,22 @@ class ImageMapItems extends Component {
 		onDragStart: (e, item) => {
 			this.item = item;
 			const { target } = e;
-			target.classList.add('dragging');
+            target.classList.add('dragging');
 		},
 		onDragOver: e => {
 			if (e.preventDefault) {
 				e.preventDefault();
 			}
-			e.dataTransfer.dropEffect = 'copy';
+            e.dataTransfer.dropEffect = 'copy';
 			return false;
 		},
 		onDragEnter: e => {
 			const { target } = e;
-			target.classList.add('over');
+            target.classList.add('over');
 		},
 		onDragLeave: e => {
 			const { target } = e;
-			target.classList.remove('over');
+            target.classList.remove('over');
 		},
 		onDrop: e => {
 			e = e || window.event;
@@ -188,7 +221,7 @@ class ImageMapItems extends Component {
 			}
 			if (e.stopPropagation) {
 				e.stopPropagation();
-			}
+            }
 			const { layerX, layerY } = e;
 			const dt = e.dataTransfer;
 			if (dt.types.length && dt.types[0] === 'Files') {
@@ -221,7 +254,7 @@ class ImageMapItems extends Component {
 		},
 		onDragEnd: e => {
 			this.item = null;
-			e.target.classList.remove('dragging');
+            e.target.classList.remove('dragging');
 		},
 	};
 
@@ -230,9 +263,8 @@ class ImageMapItems extends Component {
 			{items.map(item => this.renderItem(item))}
 		</Flex>
 	);
-
 	renderItem = (item, centered) =>
-		item.type === 'drawing' ? (
+		(item.type === 'drawing' || item.option.type === 'photspot') ? (
 			<div
 				key={item.name}
 				draggable
@@ -260,11 +292,93 @@ class ImageMapItems extends Component {
 				</span>
 				{this.state.collapse ? null : <div className="rde-editor-items-item-text">{item.name}</div>}
 			</div>
-		);
-
+        );
+    getAllFromS3 = (bucket) => {
+        const params = {
+            Bucket: bucket.bucketName
+        };
+        this.myBucket.listObjects(params, (err, data) => {
+            if (err) {} // an error occurred
+            else{
+				let mediaList = [];
+                data.Contents.forEach((object, i) => {
+                    const newFile = {
+                        "_id": i + 1,
+                        "title": object.Owner.DisplayName,
+                        "size": object.size,
+                        "fileName": object.Key,
+                        "type": "image/jpeg",
+                        "createdAt": new Date(),
+                        "thumbnailUrl": getThumbnailUrl(s3, object.Key)
+					}
+					mediaList.push(newFile);
+				})
+				this.setState({fileLibraryList: mediaList})
+                this.forceUpdate();
+            }
+        
+        })
+    }
+    uploadFileToS3 = (fileBase64, fileMeta) => {
+        const buf = Buffer.from(fileBase64.replace(/^data:image\/\w+;base64,/, ""),'base64');
+        const params = {
+            ACL: 'public-read',
+            Key: fileMeta.fileName,
+            ContentType: fileMeta.type,
+            Body: buf,
+            ContentEncoding: 'base64'
+        };
+        this.myBucket.putObject(params)
+            .on('httpUploadProgress', (evt) => {
+            })
+            .send((err) => {
+                if (err) {
+                } else {
+                    const { fileLibraryList } = this.state;
+                    let isDuplicated = false;
+                    for (let i = 0; i < fileLibraryList.length; i++) {
+                        const e = fileLibraryList[i];
+                        if (e.fileName === fileMeta.fileName) {
+                            isDuplicated = true;
+                            break;
+                        }
+                        
+                    }
+                    const newFile = {
+                        "_id": fileLibraryList.length + 1,
+                        "title": fileMeta.fileName,
+                        "size": fileMeta.size,
+                        "fileName": fileMeta.fileName,
+                        "type": "image/jpeg",
+                        "createdAt": new Date(),
+                        "thumbnailUrl": getThumbnailUrl(s3, fileMeta.fileName)
+                    }
+                    if (!isDuplicated) {
+                        this.setState({fileLibraryList: [...fileLibraryList, newFile]});
+                        this.forceUpdate();
+                    }
+                }
+            })
+        }
+    uploadCallback = async (fileBase64, fileMeta) => {
+        this.uploadFileToS3(fileBase64, fileMeta);
+        return true;
+    }
+    deleteCallback = async (item) => {
+    }
+    selectCallback = (item) => {
+        const { canvasRef } = this.props;
+        const { imageItem, centered } = this.state;
+        this.setState({rmlDisplay: false});
+        const id = v4();
+        let option = Object.assign({}, imageItem.option, { id });
+        option.src = item.thumbnailUrl;
+        canvasRef.handler.add(option, centered);
+        this.forceUpdate();
+    }
 	render() {
 		const { descriptors } = this.props;
-		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption } = this.state;
+		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, rmlDisplay, fileLibraryList } = this.state;
 		const className = classnames('rde-editor-items', {
 			minimize: collapse,
 		});
@@ -324,6 +438,17 @@ class ImageMapItems extends Component {
 					onCancel={this.handlers.onSVGModalVisible}
 					option={svgOption}
 				/>
+                <ReactMediaLibrary
+                    show={rmlDisplay}
+                    onHide={() => {
+                        this.setState({rmlDisplay: false});
+                        this.forceUpdate();
+                    }}
+                    fileUploadCallback={this.uploadCallback}
+                    fileLibraryList={fileLibraryList}
+                    fileSelectCallback={this.selectCallback}
+                    fileDeleteCallback={this.deleteCallback}
+                />
 			</div>
 		);
 	}

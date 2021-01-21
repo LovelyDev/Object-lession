@@ -102,6 +102,9 @@ class Title extends Component {
 						<Menu.Item key="workflow" style={{ color: '#fff' }}>
 							{i18n.t('workflow.workflow')}
 						</Menu.Item>
+						<Menu.Item key="projects" style={{ color: '#fff' }}>
+							{i18n.t('Projects')}
+						</Menu.Item>
 						{/* <Menu.Item key="flow" style={{ color: '#fff' }}>{i18n.t('flow.flow')}</Menu.Item> */}
 						{/* <Menu.Item key="hexgrid" style={{ color: '#fff' }}>
 							{i18n.t('hexgrid.hexgrid')}

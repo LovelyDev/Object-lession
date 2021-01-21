@@ -388,7 +388,7 @@ export interface KeyEvent {
 	cut?: boolean;
 }
 
-export type InteractionMode = 'selection' | 'grab' | 'polygon' | 'line' | 'arrow' | 'link' | 'crop';
+export type InteractionMode = 'selection' | 'grab' | 'polygon' | 'line' | 'arrow' | 'link' | 'crop' | 'photspot';
 
 export interface FabricEvent<T extends any = Event> extends Omit<fabric.IEvent, 'e'> {
 	e: T;

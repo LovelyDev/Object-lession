@@ -33,10 +33,14 @@ const render = (Component) => {
 };
 
 render(App);
-if (module.hot) {
-    module.hot.accept('./containers/App', () => {
-        render(App);
-    });
+// if (module.hot) {
+//     module.hot.accept('./containers/App', () => {
+//         const NextApp = require('./containers/App').default
+//         render(NextApp);
+//     });
+// }
+if(module.hot) {
+    module.hot.accept();
 }
 
 registerServiceWorker();

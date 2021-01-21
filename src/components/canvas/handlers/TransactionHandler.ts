@@ -34,7 +34,7 @@ export interface TransactionTransform {
 	flipX?: number;
 	flipY?: number;
 	originX?: string;
-	originY?: string;
+    originY?: string;
 }
 
 export interface TransactionEvent {

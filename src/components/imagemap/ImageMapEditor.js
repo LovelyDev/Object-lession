@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Badge, Button, Popconfirm, Menu } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
+import { v4 } from 'uuid';
+import axios from 'axios';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -16,6 +18,7 @@ import '../../styles/index.less';
 import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
+import PageListPanel from './PageListPanel/PageListPanel';
 
 const propertiesToInclude = [
 	'id',
@@ -77,19 +80,25 @@ const defaultOption = {
 };
 
 class ImageMapEditor extends Component {
-	state = {
-		selectedItem: null,
-		zoomRatio: 1,
-		preview: false,
-		loading: false,
-		progress: 0,
-		animations: [],
-		styles: [],
-		dataSources: [],
-		editing: false,
-		descriptors: {},
-		objects: undefined,
-	};
+    constructor(props) {
+        super(props);
+        this.state = {
+            selectedItem: null,
+            zoomRatio: 1,
+            preview: false,
+            loading: false,
+            progress: 0,
+            animations: [],
+            styles: [],
+            dataSources: [],
+            editing: false,
+            descriptors: {},
+            objects: undefined,
+            canvasRefs: [{id: 0, canvasRef: null}],
+            curCanvasRefId: 0
+        };
+    }
+	
 
 	componentDidMount() {
 		this.showLoading(true);
@@ -106,7 +115,41 @@ class ImageMapEditor extends Component {
 		this.setState({
 			selectedItem: null,
 		});
-		this.shortcutHandlers.esc();
+        this.shortcutHandlers.esc();
+        const { projectId } = this.props;
+        if (projectId) {
+            this.showLoading(true);
+            this.forceUpdate();
+            axios.get(`https://api.mathcurious.com/projects/${projectId}`)
+            .then(res => {
+                const { project_json } = res.data;
+                const { objectsList, animations, styles, dataSources } = project_json;
+                this.setState({
+                    animations,
+                    styles,
+                    dataSources
+                });
+                if (objectsList) {
+                    const newCanvasRefs = objectsList.map((page, i) => {
+                        const data = page.objects.filter(obj => {
+                            if (!obj.id) {
+                                return false;
+                            }
+                            return true;
+                        });
+                        return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
+                    });
+                    this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
+                } else {
+                    const id = v4();
+                    this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id})
+                }
+                setTimeout(() => {
+                    this.showLoading(false);
+                    this.forceUpdate();
+                }, 500);
+            })
+        }
 	}
 
 	canvasHandlers = {
@@ -120,7 +163,7 @@ class ImageMapEditor extends Component {
 				this.canvasHandlers.onSelect(null);
 				return;
 			}
-			this.canvasRef.handler.select(target);
+            this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.select(target);
 		},
 		onSelect: target => {
 			const { selectedItem } = this.state;
@@ -128,21 +171,25 @@ class ImageMapEditor extends Component {
 				if (selectedItem && target.id === selectedItem.id) {
 					return;
 				}
-				this.canvasRef.handler.getObjects().forEach(obj => {
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.getObjects().forEach(obj => {
 					if (obj) {
-						this.canvasRef.handler.animationHandler.resetAnimation(obj, true);
+						this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.animationHandler.resetAnimation(obj, true);
 					}
 				});
 				this.setState({
 					selectedItem: target,
-				});
+                });
 				return;
 			}
-			this.canvasRef.handler.getObjects().forEach(obj => {
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.getObjects().forEach(obj => {
 				if (obj) {
-					this.canvasRef.handler.animationHandler.resetAnimation(obj, true);
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.animationHandler.resetAnimation(obj, true);
 				}
-			});
+            });
+            if (target && typeof target._objects !== undefined) {
+                this.setState({ selectedItem: target._objects });
+                return ;
+            }
 			this.setState({
 				selectedItem: null,
 			});
@@ -152,7 +199,7 @@ class ImageMapEditor extends Component {
 			if (!editing) {
 				this.changeEditing(true);
 			}
-			this.canvasHandlers.onSelect(null);
+            this.canvasHandlers.onSelect(null);
 		},
 		onModified: debounce(() => {
 			const { editing } = this.state;
@@ -178,15 +225,15 @@ class ImageMapEditor extends Component {
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
-				this.canvasRef.handler.scaleToResize(allValues.width, allValues.height);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.scaleToResize(allValues.width, allValues.height);
 				return;
 			}
 			if (changedKey === 'angle') {
-				this.canvasRef.handler.rotate(allValues.angle);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.rotate(allValues.angle);
 				return;
 			}
 			if (changedKey === 'locked') {
-				this.canvasRef.handler.setObject({
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setObject({
 					lockMovementX: changedValue,
 					lockMovementY: changedValue,
 					hasControls: !changedValue,
@@ -198,47 +245,47 @@ class ImageMapEditor extends Component {
 			}
 			if (changedKey === 'file' || changedKey === 'src' || changedKey === 'code') {
 				if (selectedItem.type === 'image') {
-					this.canvasRef.handler.setImageById(selectedItem.id, changedValue);
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setImageById(selectedItem.id, changedValue);
 				} else if (selectedItem.superType === 'element') {
-					this.canvasRef.handler.elementHandler.setById(selectedItem.id, changedValue);
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.elementHandler.setById(selectedItem.id, changedValue);
 				}
 				return;
 			}
 			if (changedKey === 'link') {
 				const link = Object.assign({}, defaultOption.link, allValues.link);
-				this.canvasRef.handler.set(changedKey, link);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, link);
 				return;
 			}
 			if (changedKey === 'tooltip') {
 				const tooltip = Object.assign({}, defaultOption.tooltip, allValues.tooltip);
-				this.canvasRef.handler.set(changedKey, tooltip);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, tooltip);
 				return;
 			}
 			if (changedKey === 'animation') {
 				const animation = Object.assign({}, defaultOption.animation, allValues.animation);
-				this.canvasRef.handler.set(changedKey, animation);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, animation);
 				return;
 			}
 			if (changedKey === 'icon') {
 				const { unicode, styles } = changedValue[Object.keys(changedValue)[0]];
 				const uni = parseInt(unicode, 16);
 				if (styles[0] === 'brands') {
-					this.canvasRef.handler.set('fontFamily', 'Font Awesome 5 Brands');
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('fontFamily', 'Font Awesome 5 Brands');
 				} else if (styles[0] === 'regular') {
-					this.canvasRef.handler.set('fontFamily', 'Font Awesome 5 Regular');
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('fontFamily', 'Font Awesome 5 Regular');
 				} else {
-					this.canvasRef.handler.set('fontFamily', 'Font Awesome 5 Free');
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('fontFamily', 'Font Awesome 5 Free');
 				}
-				this.canvasRef.handler.set('text', String.fromCodePoint(uni));
-				this.canvasRef.handler.set('icon', changedValue);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('text', String.fromCodePoint(uni));
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('icon', changedValue);
 				return;
 			}
 			if (changedKey === 'shadow') {
 				if (allValues.shadow.enabled) {
 					if ('blur' in allValues.shadow) {
-						this.canvasRef.handler.setShadow(allValues.shadow);
+						this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setShadow(allValues.shadow);
 					} else {
-						this.canvasRef.handler.setShadow({
+						this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setShadow({
 							enabled: true,
 							blur: 15,
 							offsetX: 10,
@@ -246,25 +293,25 @@ class ImageMapEditor extends Component {
 						});
 					}
 				} else {
-					this.canvasRef.handler.setShadow(null);
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setShadow(null);
 				}
 				return;
 			}
 			if (changedKey === 'fontWeight') {
-				this.canvasRef.handler.set(changedKey, changedValue ? 'bold' : 'normal');
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue ? 'bold' : 'normal');
 				return;
 			}
 			if (changedKey === 'fontStyle') {
-				this.canvasRef.handler.set(changedKey, changedValue ? 'italic' : 'normal');
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue ? 'italic' : 'normal');
 				return;
 			}
 			if (changedKey === 'textAlign') {
-				this.canvasRef.handler.set(changedKey, Object.keys(changedValue)[0]);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, Object.keys(changedValue)[0]);
 				return;
 			}
 			if (changedKey === 'trigger') {
 				const trigger = Object.assign({}, defaultOption.trigger, allValues.trigger);
-				this.canvasRef.handler.set(changedKey, trigger);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, trigger);
 				return;
 			}
 			if (changedKey === 'filters') {
@@ -272,54 +319,54 @@ class ImageMapEditor extends Component {
 				const filterValue = allValues.filters[filterKey];
 				if (filterKey === 'gamma') {
 					const rgb = [filterValue.r, filterValue.g, filterValue.b];
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						gamma: rgb,
 					});
 					return;
 				}
 				if (filterKey === 'brightness') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						brightness: filterValue.brightness,
 					});
 					return;
 				}
 				if (filterKey === 'contrast') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						contrast: filterValue.contrast,
 					});
 					return;
 				}
 				if (filterKey === 'saturation') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						saturation: filterValue.saturation,
 					});
 					return;
 				}
 				if (filterKey === 'hue') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						rotation: filterValue.rotation,
 					});
 					return;
 				}
 				if (filterKey === 'noise') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						noise: filterValue.noise,
 					});
 					return;
 				}
 				if (filterKey === 'pixelate') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						blocksize: filterValue.blocksize,
 					});
 					return;
 				}
 				if (filterKey === 'blur') {
-					this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey].enabled, {
 						value: filterValue.value,
 					});
 					return;
 				}
-				this.canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey]);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.imageHandler.applyFilterByType(filterKey, changedValue[filterKey]);
 				return;
 			}
 			if (changedKey === 'chartOption') {
@@ -329,34 +376,34 @@ class ImageMapEditor extends Component {
 					const { animations, styles } = this.state;
 					const chartOption = compiled(3, animations, styles, selectedItem.userProperty);
 					selectedItem.setChartOptionStr(changedValue);
-					this.canvasRef.handler.elementHandler.setById(selectedItem.id, chartOption);
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.elementHandler.setById(selectedItem.id, chartOption);
 				} catch (error) {
 					console.error(error);
 				}
 				return;
 			}
-			this.canvasRef.handler.set(changedKey, changedValue);
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue);
 		},
 		onChangeWokarea: (changedKey, changedValue, allValues) => {
 			if (changedKey === 'layout') {
-				this.canvasRef.handler.workareaHandler.setLayout(changedValue);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setLayout(changedValue);
 				return;
 			}
 			if (changedKey === 'file' || changedKey === 'src') {
-				this.canvasRef.handler.workareaHandler.setImage(changedValue);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setImage(changedValue);
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
-				this.canvasRef.handler.originScaleToResize(
-					this.canvasRef.handler.workarea,
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.originScaleToResize(
+					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea,
 					allValues.width,
 					allValues.height,
 				);
-				this.canvasRef.canvas.centerObject(this.canvasRef.handler.workarea);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.centerObject(this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea);
 				return;
 			}
-			this.canvasRef.handler.workarea.set(changedKey, changedValue);
-			this.canvasRef.canvas.requestRenderAll();
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea.set(changedKey, changedValue);
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.requestRenderAll();
 		},
 		onTooltip: (ref, target) => {
 			const value = Math.random() * 10 + 1;
@@ -408,21 +455,21 @@ class ImageMapEditor extends Component {
 					<Menu>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.toGroup();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.toGroup();
 							}}
 						>
 							{i18n.t('action.object-group')}
 						</Menu.Item>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.duplicate();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.duplicate();
 							}}
 						>
 							{i18n.t('action.clone')}
 						</Menu.Item>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.remove();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.remove();
 							}}
 						>
 							{i18n.t('action.delete')}
@@ -435,21 +482,21 @@ class ImageMapEditor extends Component {
 					<Menu>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.toActiveSelection();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.toActiveSelection();
 							}}
 						>
 							{i18n.t('action.object-ungroup')}
 						</Menu.Item>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.duplicate();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.duplicate();
 							}}
 						>
 							{i18n.t('action.clone')}
 						</Menu.Item>
 						<Menu.Item
 							onClick={() => {
-								this.canvasRef.handler.remove();
+								this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.remove();
 							}}
 						>
 							{i18n.t('action.delete')}
@@ -461,14 +508,14 @@ class ImageMapEditor extends Component {
 				<Menu>
 					<Menu.Item
 						onClick={() => {
-							this.canvasRef.handler.duplicateById(target.id);
+							this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.duplicateById(target.id);
 						}}
 					>
 						{i18n.t('action.clone')}
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
-							this.canvasRef.handler.removeById(target.id);
+							this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.removeById(target.id);
 						}}
 					>
 						{i18n.t('action.delete')}
@@ -484,8 +531,8 @@ class ImageMapEditor extends Component {
 	handlers = {
 		onChangePreview: checked => {
 			let data;
-			if (this.canvasRef) {
-				data = this.canvasRef.handler.exportJSON().filter(obj => {
+			if (this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef) {
+				data = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.exportJSON().filter(obj => {
 					if (!obj.id) {
 						return false;
 					}
@@ -514,22 +561,27 @@ class ImageMapEditor extends Component {
 						}
 					};
 					reader.onload = e => {
-						const { objects, animations, styles, dataSources } = JSON.parse(e.target.result);
+						const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
 						this.setState({
 							animations,
 							styles,
-							dataSources,
+							dataSources
 						});
-						if (objects) {
-							this.canvasRef.handler.clear(true);
-							const data = objects.filter(obj => {
-								if (!obj.id) {
-									return false;
-								}
-								return true;
+						if (objectsList) {
+							const newCanvasRefs = objectsList.map((page, i) => {
+								const data = page.objects.filter(obj => {
+									if (!obj.id) {
+										return false;
+									}
+									return true;
+								});
+								return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
 							});
-							this.canvasRef.handler.importJSON(data);
+							this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
 						}
+						setTimeout(() => {
+							this.forceUpdate();
+						}, 500);
 					};
 					reader.onloadend = () => {
 						this.showLoading(false);
@@ -555,15 +607,19 @@ class ImageMapEditor extends Component {
 		},
 		onDownload: () => {
 			this.showLoading(true);
-			const objects = this.canvasRef.handler.exportJSON().filter(obj => {
-				if (!obj.id) {
-					return false;
-				}
-				return true;
-			});
+			const { canvasRefs } = this.state;
+			const objectsList = canvasRefs.map(canvasRef => {
+				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
+					if (!obj.id) {
+						return false;
+					}
+					return true;
+				});
+				return {id: canvasRef.id, objects};
+			})
 			const { animations, styles, dataSources } = this.state;
 			const exportDatas = {
-				objects,
+				objectsList,
 				animations,
 				styles,
 				dataSources,
@@ -572,7 +628,7 @@ class ImageMapEditor extends Component {
 			anchorEl.href = `data:text/json;charset=utf-8,${encodeURIComponent(
 				JSON.stringify(exportDatas, null, '\t'),
 			)}`;
-			anchorEl.download = `${this.canvasRef.handler.workarea.name || 'sample'}.json`;
+			anchorEl.download = `${this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea.name || 'sample'}.json`;
 			document.body.appendChild(anchorEl); // required for firefox
 			anchorEl.click();
 			anchorEl.remove();
@@ -603,8 +659,41 @@ class ImageMapEditor extends Component {
 			});
 		},
 		onSaveImage: () => {
-			this.canvasRef.handler.saveCanvasImage();
-		},
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.saveCanvasImage();
+        },
+        onSaveProject: () => {
+            this.showLoading(true);
+			const { canvasRefs } = this.state;
+			const objectsList = canvasRefs.map(canvasRef => {
+				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
+					if (!obj.id) {
+						return false;
+					}
+					return true;
+				});
+				return {id: canvasRef.id, objects};
+			})
+			const { animations, styles, dataSources, curCanvasRefId } = this.state;
+			const exportDatas = {
+				objectsList,
+				animations,
+				styles,
+				dataSources,
+            };
+            const { projectId } = this.props;
+            if (!projectId) {
+                this.showLoading(false);
+                return;
+            }
+            axios.put(`https://api.mathcurious.com/projects/${projectId}`, {
+                project_json: exportDatas
+            })
+            .then(res => {
+                this.showLoading(false);
+                alert("Save project successfully");
+            })
+            
+        }
 	};
 
 	shortcutHandlers = {
@@ -632,6 +721,80 @@ class ImageMapEditor extends Component {
 			editing,
 		});
 	};
+    
+    onPanelStateChange = (type, value) => {
+        if (type === 'init') {
+			const id = v4();
+            this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id});
+        } else if (type === 'page-change') {
+            this.setState({curCanvasRefId: value});
+        } else if (type === 'add') {
+			const id = v4();
+            const { canvasRefs } = this.state;
+            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null}]})
+        } else if (type === 'delete') {
+			const id = value;
+			const { canvasRefs, curCanvasRefId } = this.state;
+            this.setState({canvasRefs: canvasRefs.filter((canvasRef, i) => {
+				if (canvasRef.id !== id) return true;
+				if (id === curCanvasRefId) {
+					if (i === (canvasRefs.length - 1)) {
+						this.setState({curCanvasRefId: canvasRefs[i - 1].id});
+					} else {
+						this.setState({curCanvasRefId: canvasRefs[i + 1].id});
+					}
+				}
+				return false; 
+			})});
+        } else if (type === 'duplicate') {
+			const { canvasRefs } = this.state;
+			let newCanvasRefs = [];
+			for (let i = 0; i < canvasRefs.length; i++) {
+				const e = canvasRefs[i];
+				newCanvasRefs.push(e);
+				if (value === e.id) {
+					const id = v4();
+					const objects = e.canvasRef.handler.exportJSON().filter(obj => {
+						if (!obj.id) {
+							return false;
+						}
+						return true;
+					});
+					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects});
+				}
+			}
+			this.setState({canvasRefs: [...newCanvasRefs]});
+		}
+		setTimeout(() => {
+			this.forceUpdate();
+		}, 300);
+    }
+
+    getCanvasRefById = (id) => {
+        const { canvasRefs } = this.state;
+        let res = 0;
+        for (let i = 0; i < canvasRefs.length; i++) {
+            const e = canvasRefs[i];
+            if (e.id === id) {
+                res = i;
+                break;
+            }
+        }
+        return res;
+    }
+
+    getPreviewImgById = (id) => {
+        const { canvasRefs } = this.state;
+        let res = null;
+        for (let i = 0; i < canvasRefs.length; i++) {
+            const e = canvasRefs[i];
+            if (e.id === id) {
+                res = e.canvasRef ? e.canvasRef.canvas.toDataURL("image/png") : null;
+				break;
+            }
+        }
+        return res;
+    }
 
 	render() {
 		const {
@@ -645,8 +808,10 @@ class ImageMapEditor extends Component {
 			dataSources,
 			editing,
 			descriptors,
-			objects,
-		} = this.state;
+            objects,
+            curCanvasRefId
+        } = this.state;
+		let { canvasRefs } = this.state;
 		const {
 			onAdd,
 			onRemove,
@@ -666,10 +831,20 @@ class ImageMapEditor extends Component {
 			onChangeAnimations,
 			onChangeStyles,
 			onChangeDataSources,
-			onSaveImage,
-		} = this.handlers;
+            onSaveImage,
+            onSaveProject
+        } = this.handlers;
 		const action = (
 			<React.Fragment>
+                <CommonButton
+					className="rde-action-btn"
+					shape="circle"
+                    icon="save"
+                    disabled={!this.props.projectId}
+					tooltipTitle={i18n.t('action.save')}
+					onClick={onSaveProject}
+					tooltipPlacement="bottomRight"
+				/>
 				<CommonButton
 					className="rde-action-btn"
 					shape="circle"
@@ -727,13 +902,19 @@ class ImageMapEditor extends Component {
 					ref={c => {
 						this.itemsRef = c;
 					}}
-					canvasRef={this.canvasRef}
+					canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
 					descriptors={descriptors}
+				/>
+                <PageListPanel
+					onPanelStateChange={this.onPanelStateChange}
+					getPreviewImgById={this.getPreviewImgById}
+					pages={canvasRefs}
+					curPageId={curCanvasRefId}
 				/>
 				<div className="rde-editor-canvas-container">
 					<div className="rde-editor-header-toolbar">
 						<ImageMapHeaderToolbar
-							canvasRef={this.canvasRef}
+							canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
 							selectedItem={selectedItem}
 							onSelect={onSelect}
 						/>
@@ -744,11 +925,20 @@ class ImageMapEditor extends Component {
 						}}
 						className="rde-editor-canvas"
 					>
-						<Canvas
+                    {
+                        canvasRefs.map(canvasRef => {
+						const { isDuplicated, objects } = canvasRef;
+						let props = {};
+						if(isDuplicated) {
+							props.onLoad = handler => handler.importJSON(objects)
+						}
+						return <Canvas
 							ref={c => {
-								this.canvasRef = c;
+								canvasRef.canvasRef = c;
 							}}
-							className="rde-canvas"
+							key={canvasRef.id}
+                            className="rde-canvas"
+                            style={canvasRef.id === curCanvasRefId ? {zIndex: 0} : {zIndex: -1}}
 							minZoom={30}
 							maxZoom={500}
 							objectOption={defaultOption}
@@ -765,11 +955,13 @@ class ImageMapEditor extends Component {
 							keyEvent={{
 								transaction: true,
 							}}
-						/>
+							{...props}
+						/>})
+                    }
 					</div>
 					<div className="rde-editor-footer-toolbar">
 						<ImageMapFooterToolbar
-							canvasRef={this.canvasRef}
+							canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
 							preview={preview}
 							onChangePreview={onChangePreview}
 							zoomRatio={zoomRatio}
@@ -777,7 +969,7 @@ class ImageMapEditor extends Component {
 					</div>
 				</div>
 				<ImageMapConfigurations
-					canvasRef={this.canvasRef}
+					canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
 					onChange={onChange}
 					selectedItem={selectedItem}
 					onChangeAnimations={onChangeAnimations}

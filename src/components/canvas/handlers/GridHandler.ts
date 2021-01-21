@@ -63,7 +63,7 @@ class GridHandler {
 					left: Math.round(target.left / grid) * grid,
 					top: Math.round(target.top / grid) * grid,
 				});
-				activeSelection.setCoords();
+                activeSelection.setCoords();
 				activeSelection.getObjects().forEach((obj: any) => {
 					if (obj.superType === 'node') {
 						const left = target.left + obj.left + target.width / 2;
