@@ -9,6 +9,7 @@ import FlowEditor from '../components/flow/FlowEditor';
 import FlowContainer from './FlowContainer';
 import HexGrid from '../components/hexgrid/HexGrid';
 import Projects from '../components/projects/Projects';
+import env from '../config/env';
 
 type EditorType = 'imagemap' | 'workflow' | 'flow' | 'hexgrid' | 'projects';
 
@@ -77,7 +78,7 @@ class App extends Component<any, IState> {
     }
 
     onDeleteProjectClick = async (id) => {
-        await axios.delete(`https://api.mathcurious.com/projects/${id}`);
+        await axios.delete(`${env.API_URL}${id}`);
         const { projects } = this.state;
         const newProjects = projects.filter(project => project.id !== id)
         this.setState({projects: [...newProjects]});
@@ -85,9 +86,9 @@ class App extends Component<any, IState> {
     }
 
     onDuplicateProjectClick = async (id) => {
-        const res = await axios.get(`https://api.mathcurious.com/projects/${id}`);
+        const res = await axios.get(`${env.API_URL}${id}`);
         const { name, project_json } = res.data;
-        const copiedProject = await axios.post("https://api.mathcurious.com/projects/", {
+        const copiedProject = await axios.post(`${env.API_URL}`, {
             name: `<${name}> Copy`,
             project_json
         });

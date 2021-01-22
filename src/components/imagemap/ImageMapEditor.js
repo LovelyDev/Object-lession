@@ -19,6 +19,7 @@ import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
+import env from '../../config/env';
 
 const propertiesToInclude = [
 	'id',
@@ -121,7 +122,7 @@ class ImageMapEditor extends Component {
         if (projectId) {
             this.showLoading(true);
             this.forceUpdate();
-            axios.get(`https://api.mathcurious.com/projects/${projectId}`)
+            axios.get(`${env.API_URL}${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
                 const { objectsList, animations, styles, dataSources } = project_json;
@@ -690,7 +691,7 @@ class ImageMapEditor extends Component {
                 this.showLoading(false);
                 return;
             }
-            axios.put(`https://api.mathcurious.com/projects/${projectId}`, {
+            axios.put(`${env.API_URL}${projectId}`, {
                 name: this.state.projectName,
                 project_json: exportDatas
             })
