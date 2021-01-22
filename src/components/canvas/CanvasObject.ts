@@ -35,9 +35,12 @@ const CanvasObject: CanvasObjectSchema = {
 	'i-text': {
 		create: ({ text, ...option }: { text: string }) => new fabric.IText(text, option),
 	},
-	textbox: {
+	text: {
 		create: ({ text, ...option }: { text: string }) => new fabric.Textbox(text, option),
-	},
+    },
+    textbox: {
+        create: (option: any) => new fabric.Rect(option),
+    },
 	triangle: {
 		create: (option: any) => new fabric.Triangle(option),
 	},

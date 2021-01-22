@@ -111,7 +111,6 @@ class NodeProperties extends Component {
     }
     render() {
         const { canvasRef, selectedItem, form } = this.props;
-        console.log("selectedItem", selectedItem);
         const {
             object_name,
             dragabble,

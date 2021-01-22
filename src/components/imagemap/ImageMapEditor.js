@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Badge, Button, Popconfirm, Menu } from 'antd';
+import { Badge, Button, Popconfirm, Menu, Input } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
@@ -19,6 +19,7 @@ import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
+import env from '../../config/env';
 
 const propertiesToInclude = [
 	'id',
@@ -95,7 +96,8 @@ class ImageMapEditor extends Component {
             descriptors: {},
             objects: undefined,
             canvasRefs: [{id: 0, canvasRef: null}],
-            curCanvasRefId: 0
+            curCanvasRefId: 0,
+            projectName: ""
         };
     }
 	
@@ -120,14 +122,15 @@ class ImageMapEditor extends Component {
         if (projectId) {
             this.showLoading(true);
             this.forceUpdate();
-            axios.get(`https://api.mathcurious.com/projects/${projectId}`)
+            axios.get(`${env.API_URL}${projectId}`)
             .then(res => {
-                const { project_json } = res.data;
+                const { project_json, name } = res.data;
                 const { objectsList, animations, styles, dataSources } = project_json;
                 this.setState({
                     animations,
                     styles,
-                    dataSources
+                    dataSources,
+                    projectName: name
                 });
                 if (objectsList) {
                     const newCanvasRefs = objectsList.map((page, i) => {
@@ -561,7 +564,8 @@ class ImageMapEditor extends Component {
 						}
 					};
 					reader.onload = e => {
-						const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
+                        const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
+                        console.log("uploaded animations", animations);
 						this.setState({
 							animations,
 							styles,
@@ -623,7 +627,8 @@ class ImageMapEditor extends Component {
 				animations,
 				styles,
 				dataSources,
-			};
+            };
+            console.log("downloaded animations", animations);
 			const anchorEl = document.createElement('a');
 			anchorEl.href = `data:text/json;charset=utf-8,${encodeURIComponent(
 				JSON.stringify(exportDatas, null, '\t'),
@@ -635,6 +640,7 @@ class ImageMapEditor extends Component {
 			this.showLoading(false);
 		},
 		onChangeAnimations: animations => {
+            console.log("animations", animations);
 			if (!this.state.editing) {
 				this.changeEditing(true);
 			}
@@ -685,10 +691,13 @@ class ImageMapEditor extends Component {
                 this.showLoading(false);
                 return;
             }
-            axios.put(`https://api.mathcurious.com/projects/${projectId}`, {
+            axios.put(`${env.API_URL}${projectId}`, {
+                name: this.state.projectName,
                 project_json: exportDatas
             })
             .then(res => {
+                const { onProjectNameChange } = this.props;
+                onProjectNameChange(this.state.projectName);
                 this.showLoading(false);
                 alert("Save project successfully");
             })
@@ -892,7 +901,7 @@ class ImageMapEditor extends Component {
 		);
 		const titleContent = (
 			<React.Fragment>
-				<span>{i18n.t('imagemap.imagemap-editor')}</span>
+                <Input style={{width: 300}} placeholder="Project Name" value={this.state.projectName} onChange={(e) => this.setState({projectName: e.target.value})}/>
 			</React.Fragment>
 		);
 		const title = <ImageMapTitle title={titleContent} action={action} />;

@@ -12,7 +12,7 @@ class AnimationList extends Component {
 	};
 
 	render() {
-		const { animations, onEdit, onDelete } = this.props;
+        const { animations, onEdit, onDelete } = this.props;
 		return (
 			<List
 				dataSource={animations}
@@ -40,9 +40,8 @@ class AnimationList extends Component {
 					return (
 						<List.Item actions={actions}>
 							<List.Item.Meta
-								avatar={<Avatar>{index}</Avatar>}
-								title={animation.title}
-								description={animation.type}
+								avatar={<Avatar>{index + 1}</Avatar>}
+								title={animation.name}
 							/>
 						</List.Item>
 					);

@@ -34,7 +34,7 @@ class Page extends Component {
                         className="rde-action-btn"
                         shape="circle"
                         icon="clone"
-                        tooltipTitle={i18n.t('action.duplicate')}
+                        tooltipTitle={i18n.t('Duplicate')}
                         onClick={() => onDuplicateClick(id)}
                     />
                 }

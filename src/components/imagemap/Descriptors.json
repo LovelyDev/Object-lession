@@ -31,12 +31,30 @@
 				"name": "font"
 			},
 			"option": {
-				"type": "textbox",
+				"type": "text",
 				"text": "",
 				"width": 60,
 				"height": 30,
 				"fontSize": 32,
 				"name": "New text"
+			}
+        },
+        {
+			"name": "TextBox",
+			"description": "",
+			"type": "textbox",
+			"icon": {
+				"prefix": "fas",
+				"name": "text-width"
+			},
+			"option": {
+				"type": "textbox",
+				"width": 80,
+                "height": 50,
+                "fill": "rgba(0,0,0,0)",
+                "stroke": "black",
+                "strokeWidth": 1,
+				"name": "New Textbox"
 			}
 		}
 	],

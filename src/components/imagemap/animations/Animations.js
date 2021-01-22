@@ -28,80 +28,47 @@ class Animations extends Component {
 	};
 
 	state = {
-		animation: initialAnimation,
 		visible: false,
-		validateTitle: {
-			validateStatus: '',
-			help: '',
-		},
-		current: 'add',
+        curModalStatus: 'add',
+        curEditNum: 0
 	};
 
 	handlers = {
-		onOk: () => {
-			if (this.state.validateTitle.validateStatus === 'error') {
-				return;
-			}
-			if (!this.state.animation.title) {
-				this.setState({
-					validateTitle: this.handlers.onValid(),
-				});
-				return;
-			}
-			if (!this.state.animation.type) {
-				this.state.animation.type = 'none';
-			}
-			if (Object.keys(this.state.animation).length === 2) {
-				this.modalRef.validateFields((err, values) => {
-					Object.assign(this.state.animation, values.animation);
-				});
-			}
-			if (this.state.current === 'add') {
-				this.props.animations.push(this.state.animation);
-			} else {
-				this.props.animations.splice(this.state.index, 1, this.state.animation);
-			}
-			this.setState(
-				{
-					visible: false,
-					animation: {},
-				},
-				() => {
-					this.props.onChangeAnimations(this.props.animations);
-				},
-			);
+		onOk: (name, animationSteps) => () => {
+            if (name === '') {
+                alert("Name should not be empty");
+                return;
+            }
+            const { onChangeAnimations } = this.props;
+            const { curModalStatus, curEditNum } = this.state;
+            if (curModalStatus === 'add') {
+                onChangeAnimations([...this.props.animations, {name, animationSteps}]);
+            } else if (curModalStatus === 'edit') {
+                let newAnimations = this.props.animations;
+                newAnimations.splice(curEditNum, 1, { name, animationSteps });
+                onChangeAnimations([...newAnimations]);
+            }
+            this.setState({
+                visible: false
+            });
+
 		},
 		onCancel: () => {
 			this.setState({
-				visible: false,
-				animation: initialAnimation,
-				validateTitle: {
-					validateStatus: '',
-					help: '',
-				},
+				visible: false
 			});
 		},
 		onAdd: () => {
 			this.setState({
-				visible: true,
-				animation: initialAnimation,
-				validateTitle: {
-					validateStatus: '',
-					help: '',
-				},
-				current: 'add',
+                visible: true,
+                curModalStatus: 'add'
 			});
 		},
 		onEdit: (animation, index) => {
 			this.setState({
 				visible: true,
-				animation,
-				validateTitle: {
-					validateStatus: '',
-					help: '',
-				},
-				current: 'modify',
-				index,
+                curModalStatus: 'edit',
+                curEditNum: index
 			});
 		},
 		onDelete: index => {
@@ -150,9 +117,13 @@ class Animations extends Component {
 	};
 
 	render() {
-		const { animations } = this.props;
-		const { visible, animation, validateTitle } = this.state;
-		const { onOk, onCancel, onAdd, onEdit, onDelete, onClear, onChange, onValid } = this.handlers;
+        const { animations, canvasRef } = this.props;
+        const { visible, curModalStatus, curEditNum } = this.state;
+        const { onAdd, onEdit, onDelete, onClear, onChange, onCancel, onOk } = this.handlers;
+        let props = {};
+        if (curModalStatus === 'edit') {
+            props = { animation: animations[curEditNum] };
+        }
 		return (
 			<Scrollbar>
 				<Form>
@@ -164,18 +135,7 @@ class Animations extends Component {
 							<Button className="rde-action-btn" shape="circle" onClick={onClear}>
 								<Icon name="times" />
 							</Button>
-							<AnimationModal
-								ref={c => {
-									this.modalRef = c;
-								}}
-								validateTitle={validateTitle}
-								visible={visible}
-								onOk={onOk}
-								animation={animation}
-								onCancel={onCancel}
-								onChange={onChange}
-								onValid={onValid}
-							/>
+							<AnimationModal visible={visible} canvasRef={canvasRef} onOk={onOk} onCancel={onCancel} {...props} />
 						</Flex>
 						<AnimationList animations={animations} onEdit={onEdit} onDelete={onDelete} />
 					</Flex>

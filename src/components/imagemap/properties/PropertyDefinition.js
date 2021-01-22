@@ -75,7 +75,7 @@ export default {
 			component: UserProperty,
 		},
 	},
-	textbox: {
+	text: {
 		general: {
 			title: 'General',
 			component: GeneralProperty,

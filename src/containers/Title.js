@@ -38,7 +38,8 @@ class Title extends Component {
 	};
 
 	render() {
-		const { visible } = this.state;
+        const { visible } = this.state;
+        const { projectName } = this.props;
 		return (
 			<Flex
 				style={{ background: 'linear-gradient(141deg,#23303e,#404040 51%,#23303e 75%)' }}
@@ -97,7 +98,7 @@ class Title extends Component {
 						selectedKeys={[this.props.current]}
 					>
 						<Menu.Item key="imagemap" style={{ color: '#fff' }}>
-							{i18n.t('imagemap.imagemap')}
+							{projectName ? projectName : i18n.t('imagemap.imagemap')}
 						</Menu.Item>
 						<Menu.Item key="workflow" style={{ color: '#fff' }}>
 							{i18n.t('workflow.workflow')}
