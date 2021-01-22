@@ -81,7 +81,7 @@ class ImageMapConfigurations extends Component {
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="vine" prefix="fab" />} key="animations">
-						<Animations animations={animations} onChangeAnimations={onChangeAnimations} />
+						<Animations animations={animations} onChangeAnimations={onChangeAnimations} canvasRef={canvasRef}/>
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="star-half-alt" />} key="styles">
 						<Styles styles={styles} onChangeStyles={onChangeStyles} />

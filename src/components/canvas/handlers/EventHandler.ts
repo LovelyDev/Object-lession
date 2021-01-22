@@ -556,16 +556,13 @@ class EventHandler {
 	 */
 	public selection = (opt: FabricEvent) => {
         const { onSelect, activeSelectionOption } = this.handler;
-        console.log("eventhandler selection", onSelect, activeSelectionOption);
 		const target = opt.target as FabricObject<fabric.ActiveSelection>;
 		if (target && target.type === 'activeSelection') {
 			target.set({
 				...activeSelectionOption,
 			});
         }
-        console.log("eventhandler selection target", target);
 		if (onSelect) {
-            console.log("selection onSelect is called");
             onSelect(target);
         }
 	};

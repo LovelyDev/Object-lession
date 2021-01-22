@@ -1,136 +1,115 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { Modal, Form, Input } from 'antd';
+import { Modal, Form, Input, List } from 'antd';
 import i18n from 'i18next';
-
-import Canvas from '../../canvas/Canvas';
-import AnimationProperty from '../properties/AnimationProperty';
+import { divide } from 'lodash';
+import { Flex } from '../../flex';
+import Scrollbar from '../../common/Scrollbar';
+import AnimationStepList from './AnimationStepList'
+import './AnimationModal.css'
 
 class AnimationModal extends Component {
-	static propTypes = {
-		form: PropTypes.any,
-		visible: PropTypes.bool,
-		animation: PropTypes.object,
-		onOk: PropTypes.func,
-		onCancel: PropTypes.func,
-	};
-
-	state = {
-		width: 150,
-		height: 150,
-	};
-
-	componentDidMount() {
-		this.waitForContainerRender(this.containerRef);
-	}
-
-	UNSAFE_componentWillReceiveProps(nextProps) {
-		if (!nextProps.visible) {
-			if (this.canvasRef) {
-				this.canvasRef.handler.animationHandler.stop('animations');
-			}
-			return;
-		}
-		if (JSON.stringify(nextProps.animation) !== JSON.stringify(this.props.animation)) {
-			this.waitForCanvasRender(this.canvasRef, nextProps.animation);
-		}
-		nextProps.form.resetFields();
-	}
-
-	waitForCanvasRender = (canvas, animation) => {
-		setTimeout(() => {
-			if (canvas) {
-				canvas.handlers.setById('animations', 'animation', animation);
-				return;
-			}
-			this.waitForCanvasRender(this.canvasRef, animation);
-		}, 5);
-	};
-
-	waitForContainerRender = container => {
-		setTimeout(() => {
-			if (container) {
-				this.setState(
-					{
-						width: container.clientWidth,
-						height: container.clientHeight,
-					},
-					() => {
-						const option = {
-							type: 'i-text',
-							text: '\uf3c5',
-							fontFamily: 'Font Awesome 5 Free',
-							fontWeight: 900,
-							fontSize: 60,
-							width: 30,
-							height: 30,
-							editable: false,
-							name: 'New marker',
-							tooltip: {
-								enabled: false,
-							},
-							left: 200,
-							top: 50,
-							id: 'animations',
-							fill: 'rgba(0, 0, 0, 1)',
-							stroke: 'rgba(255, 255, 255, 0)',
-						};
-						this.canvasRef.handler.add(option);
-					},
-				);
-				return;
-			}
-			this.waitForContainerRender(this.containerRef);
-		}, 5);
-	};
-
+    constructor(props) {
+        super(props);
+        this.state = {
+            name: "",
+            animationSteps: []
+        }
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        if (!this.props.visible && nextProps.visible) {
+            const { animation } = nextProps;
+            if (typeof animation === 'undefined') {
+                this.setState({
+                    name: "",
+                    animationSteps: []
+                });
+            } else {
+                this.setState({
+                    name: animation.name,
+                    animationSteps: [...animation.animationSteps]
+                })
+            }
+        }
+        
+        return true;
+    }
+    onStepAdd = () => {
+        const { animationSteps } = this.state;
+        this.setState({
+            animationSteps: [...animationSteps, {
+                object: null,
+                type: "HIDE",
+                duration: 1
+            }]
+        });
+    }
+    onStepClear = () => {
+        this.setState({ animationSteps: [] });
+    }
+    onStepDelete = (index) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1);
+        this.setState({ animationSteps: [...newAnimationSteps] });
+    }
+    onObjectChange = (index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], object: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
+        console.log("newAnimationSteps", newAnimationSteps);
+    }
+    onTypeChange = (index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], type: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
+    }
+    onDurationChange = (index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], duration: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
+    }
 	render() {
-		const { form, visible, animation, onOk, onCancel, validateTitle, onChange } = this.props;
-		const { width, height } = this.state;
+        const { visible, canvasRef } = this.props;
+        const { onOk, onCancel } = this.props;
+        const { animationSteps, name } = this.state;
+        let objects = null;
+        if (canvasRef) {
+            objects = canvasRef.handler.exportJSON().filter(obj => {
+                if (!obj) return false;
+                if (typeof obj.object_name === 'undefined' || !obj.object_name || obj.object_name === '')
+                    return false;
+                return true;
+            })
+        }
 		return (
-			<Modal onOk={onOk} onCancel={onCancel} visible={visible}>
-				<Form.Item
-					label={i18n.t('common.title')}
-					required
-					colon={false}
-					hasFeedback
-					help={validateTitle.help}
-					validateStatus={validateTitle.validateStatus}
-				>
-					<Input
-						value={animation.title}
-						onChange={e => {
-							onChange(
-								null,
-								{ animation: { title: e.target.value } },
-								{ animation: { ...animation, title: e.target.value } },
-							);
-						}}
-					/>
-				</Form.Item>
-				{AnimationProperty.render(this.canvasRef, form, { animation, id: 'animations' })}
-				<div
-					ref={c => {
-						this.containerRef = c;
-					}}
-				>
-					<Canvas
-						ref={c => {
-							this.canvasRef = c;
-						}}
-						editable={false}
-						canvasOption={{ width, height, backgroundColor: '#f3f3f3' }}
-						workareaOption={{ backgroundColor: 'transparent' }}
-					/>
-				</div>
+			<Modal visible={visible} onOk={onOk(name, animationSteps)} onCancel={onCancel}>
+                <Flex className="animation-modal-body" flexDirection="column">
+                    <div className="name-field">
+                        <span>Name: </span>
+                        <Input
+                            placeholder="Name"
+                            style={{width: 200}}
+                            value={name}
+                            onChange={(e) => this.setState({ name: e.target.value })}
+                        />
+                    </div>
+                    <div className="rde-editor-items animation-step-list">
+                        <Scrollbar>
+                            <AnimationStepList
+                                animationSteps={animationSteps}
+                                onAdd={this.onStepAdd}
+                                onClear={this.onStepClear}
+                                onDelete={this.onStepDelete}
+                                onObjectChange={this.onObjectChange}
+                                onTypeChange={this.onTypeChange}
+                                onDurationChange={this.onDurationChange}
+                                objects={objects}
+                            />
+                        </Scrollbar>
+                    </div>
+                </Flex>
 			</Modal>
 		);
 	}
 }
 
-export default Form.create({
-	onValuesChange: (props, changedValues, allValues) => {
-		const { onChange } = props;
-		onChange(props, changedValues, allValues);
-	},
-})(AnimationModal);
+export default AnimationModal;

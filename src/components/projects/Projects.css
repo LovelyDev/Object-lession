@@ -35,6 +35,12 @@
     background: #fff;
 }
 
+.project-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .project-item {
     width: 200px;
     height: 200px;
@@ -42,13 +48,23 @@
     border: 3px solid;
     border-radius: 10px;
     border-color: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .project-item:hover {
     border-color: #08979c;
+}
+
+.duplicate-btn{
+    display: none;
+}
+
+.project-item:hover .project-item-content .duplicate-btn {
+    display: block;
+}
+
+.project-item-header {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .project-list-header {

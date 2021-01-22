@@ -67,7 +67,7 @@ class ImageMapList extends Component {
 						let prefix = 'fas';
 						if (obj.type === 'i-text') {
 							icon = 'map-marker-alt';
-						} else if (obj.type === 'textbox') {
+						} else if (obj.type === 'textbox' || obj.type === 'text') {
 							icon = 'font';
 						} else if (obj.type === 'image') {
 							icon = 'image';

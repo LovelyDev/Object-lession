@@ -16,19 +16,22 @@ interface IState {
     activeEditor?: EditorType;
     projectId: any;
     projects: any;
+    projectName: any;
 }
 
 class App extends Component<any, IState> {
 	state: IState = {
-        activeEditor: 'imagemap',
+        activeEditor: 'projects',
         projectId: null,
-        projects: [
-            { id: 1, name: "First Project" },
-            { id: 2, name: "Second Project" },
-            { id: 3, name: "Third Project" }
-        ]
+        projects: [],
+        projectName: null
 	};
-
+    componentDidMount() {
+        axios.get("https://api.mathcurious.com/projects")
+        .then(res => {
+            this.setState({projects: res.data});
+        })
+    }
 	onChangeMenu = ({ key }) => {
         if (key === 'projects') {
             axios.get("https://api.mathcurious.com/projects")
@@ -42,9 +45,19 @@ class App extends Component<any, IState> {
     };
     
     onProjectClick = (id) => () => {
+        const { projects } = this.state;
+        let projectName = null;
+        for (let i = 0; i < projects.length; i++) {
+            const e = projects[i];
+            if (e.id === id) {
+                projectName = e.name;
+                break;
+            }
+        }
         this.setState({
             activeEditor: "imagemap",
-            projectId: id
+            projectId: id,
+            projectName
         })
     }
 
@@ -59,15 +72,41 @@ class App extends Component<any, IState> {
         })
     }
 
+    onProjectNameChange = (projectName) => {
+        this.setState({projectName});
+    }
+
+    onDeleteProjectClick = async (id) => {
+        await axios.delete(`https://api.mathcurious.com/projects/${id}`);
+        const { projects } = this.state;
+        const newProjects = projects.filter(project => project.id !== id)
+        this.setState({projects: [...newProjects]});
+        return true;
+    }
+
+    onDuplicateProjectClick = async (id) => {
+        const res = await axios.get(`https://api.mathcurious.com/projects/${id}`);
+        const { name, project_json } = res.data;
+        const copiedProject = await axios.post("https://api.mathcurious.com/projects/", {
+            name: `<${name}> Copy`,
+            project_json
+        });
+        const { projects } = this.state;
+        this.setState({projects: [...projects, copiedProject.data]});
+        return true;
+    }
+
 	renderEditor = (activeEditor: EditorType) => {
         const { projects, projectId } = this.state;
-        let props = {};
+        let imageMapProps = {};
         if (projectId) {
-            props = {projectId}
+            imageMapProps = { projectId };
         }
 		switch (activeEditor) {
 			case 'imagemap':
-				return <ImageMapEditor {...props}/>;
+                return <ImageMapEditor
+                        onProjectNameChange={this.onProjectNameChange}
+                        {...imageMapProps} />;
 			case 'workflow':
 				return <WorkflowEditor />;
 			case 'flow':
@@ -79,12 +118,14 @@ class App extends Component<any, IState> {
                     projects={projects}
                     onProjectClick={this.onProjectClick}
                     onAddProjectClick={this.onAddProjectClick}
+                    onDeleteProjectClick={this.onDeleteProjectClick}
+                    onDuplicateProjectClick={this.onDuplicateProjectClick}
                     />;
 		}
 	};
 
 	render() {
-		const { activeEditor } = this.state;
+		const { activeEditor, projectName } = this.state;
 		return (
 			<div className="rde-main">
 				<Helmet>
@@ -110,7 +151,7 @@ class App extends Component<any, IState> {
 					<script async={true} src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" />
 				</Helmet>
 				<div className="rde-title">
-					<Title onChangeMenu={this.onChangeMenu} current={activeEditor} />
+					<Title onChangeMenu={this.onChangeMenu} current={activeEditor} projectName={projectName} />
 				</div>
 				<FlowContainer>
 					<div className="rde-content">{this.renderEditor(activeEditor)}</div>
