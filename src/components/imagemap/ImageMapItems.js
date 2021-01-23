@@ -399,7 +399,8 @@ class ImageMapItems extends Component {
         const file = new File([u8arr], fileMeta.fileName, {type:mime});
         /* ---------------------------------------------- */
         let formData = new FormData();
-        formData.append('files.image_file', file, fileMeta.fileName);
+		formData.append('files.image_file', file, fileMeta.fileName);
+		formData.append('data', JSON.stringify({}));
         axios({
             method: 'post',
             url: `${API_URL}/images`,
