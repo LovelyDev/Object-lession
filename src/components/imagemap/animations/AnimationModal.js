@@ -55,7 +55,6 @@ class AnimationModal extends Component {
         let newAnimationSteps = this.state.animationSteps;
         newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], object: value});
         this.setState({ animationSteps: [...newAnimationSteps] });
-        console.log("newAnimationSteps", newAnimationSteps);
     }
     onTypeChange = (index, value) => {
         let newAnimationSteps = this.state.animationSteps;

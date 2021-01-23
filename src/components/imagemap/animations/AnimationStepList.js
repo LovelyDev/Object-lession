@@ -16,7 +16,6 @@ class AnimationStepList extends Component {
         for (let i = 0; i < objects.length; i++) {
             const e = objects[i];
             if (e.object_name === value) {
-                console.log("selected object", e);
                 obj = e;
                 break;
             }
@@ -57,7 +56,6 @@ class AnimationStepList extends Component {
                     <List
                         dataSource={animationSteps}
                         renderItem={(animationStep, index) => {
-                            console.log("animationStep", animationStep);
                             const actions = [
                                 <Button
                                     className="rde-action-btn"

@@ -401,36 +401,32 @@ class ImageMapItems extends Component {
         let formData = new FormData();
 		formData.append('files.image_file', file, fileMeta.fileName);
 		formData.append('data', JSON.stringify({}));
-        axios({
+        const res = await axios({
             method: 'post',
             url: `${API_URL}/images`,
             data: formData,
             headers: {'Content-Type': 'multipart/form-data' }
-        })
-        .then((res) => {
-            //handle success
-			console.log(res);
-			const { image_file } = res.data;
-			if (!image_file) return;
-			const { id, caption, size, name, mime, created_at, url } = image_file;
-			const newFile = {
-				"_id": id,
-				"title": caption,
-				"size": size,
-				"fileName": name,
-				"type": mime,
-				"createdAt": new Date(created_at),
-				"thumbnailUrl": url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "")
-			};
-			const { fileLibraryList } = this.state;
-			this.setState({fileLibraryList: [...fileLibraryList, newFile]});
-            this.forceUpdate();
-        })
-        .catch((res) => {
-            //handle error
-            console.log(res);
         });
-        return true;
+        console.log("uploaded img", res);
+        if (res.statusText === "OK") {
+            const { image_file } = res.data;
+            if (!image_file) return;
+            const { id, caption, size, name, mime, created_at, url } = image_file;
+            const newFile = {
+                "_id": id,
+                "title": caption,
+                "size": size,
+                "fileName": name,
+                "type": mime,
+                "createdAt": new Date(created_at),
+                "thumbnailUrl": url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "")
+            };
+            const { fileLibraryList } = this.state;
+            this.setState({fileLibraryList: [...fileLibraryList, newFile]});
+            this.forceUpdate();
+            return true;
+        }
+        return false;
     }
     deleteCallback = async (item) => {
     }
