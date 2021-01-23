@@ -407,13 +407,28 @@ class ImageMapItems extends Component {
             data: formData,
             headers: {'Content-Type': 'multipart/form-data' }
         })
-        .then(function (response) {
+        .then((res) => {
             //handle success
-            console.log(response);
+			console.log(res);
+			const { image_file } = res.data;
+			if (!image_file) return;
+			const { id, caption, size, name, mime, created_at, url } = image_file;
+			const newFile = {
+				"_id": id,
+				"title": caption,
+				"size": size,
+				"fileName": name,
+				"type": mime,
+				"createdAt": new Date(created_at),
+				"thumbnailUrl": url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "")
+			};
+			const { fileLibraryList } = this.state;
+			this.setState({fileLibraryList: [...fileLibraryList, newFile]});
+            this.forceUpdate();
         })
-        .catch(function (response) {
+        .catch((res) => {
             //handle error
-            console.log(response);
+            console.log(res);
         });
         return true;
     }
