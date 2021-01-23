@@ -24,6 +24,13 @@ class ImageMapConfigurations extends Component {
 		dataSources: PropTypes.array,
 	};
 
+    shouldComponentUpdate(nextProps, nextState) {
+        if (this.props.selectedItem !== nextProps.selectedItem) {
+            this.setState({ activeKey: 'node' });
+        }
+        return true;
+    }
+
 	state = {
 		activeKey: 'map',
 	};

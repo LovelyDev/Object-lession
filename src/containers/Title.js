@@ -97,9 +97,10 @@ class Title extends Component {
 						onClick={this.props.onChangeMenu}
 						selectedKeys={[this.props.current]}
 					>
-						<Menu.Item key="imagemap" style={{ color: '#fff' }}>
-							{projectName ? projectName : i18n.t('imagemap.imagemap')}
+						{projectName && <Menu.Item key="imagemap" style={{ color: '#fff' }}>
+							{projectName}
 						</Menu.Item>
+                        }
 						<Menu.Item key="workflow" style={{ color: '#fff' }}>
 							{i18n.t('workflow.workflow')}
 						</Menu.Item>

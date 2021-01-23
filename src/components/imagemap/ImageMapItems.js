@@ -5,6 +5,7 @@ import { v4 } from 'uuid';
 import classnames from 'classnames';
 import i18n from 'i18next';
 import AWS from 'aws-sdk'
+import axios from 'axios';
 
 import { Flex } from '../flex';
 import Icon from '../icon/Icon';
@@ -13,6 +14,7 @@ import CommonButton from '../common/CommonButton';
 import { SVGModal } from '../common';
 import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
 import { s3 } from './config/aws';
+import { API_URL } from '../../config/env';
 
 notification.config({
 	top: 80,
@@ -134,7 +136,7 @@ class ImageMapItems extends Component {
 				return;
             }
             if (item.type === 'image') {
-                this.getAllFromS3(s3);
+                this.getAllImages();
                 this.setState({rmlDisplay: true, imageItem: item, centered});
             } else {
                 canvasRef.handler.add(option, centered);
@@ -319,6 +321,29 @@ class ImageMapItems extends Component {
         
         })
     }
+    getAllImages = () => {
+        axios.get(`${API_URL}/images`)
+        .then(res => {
+            let mediaList = [];
+            res.data.forEach(img => {
+                const { image_file } = img;
+                if (!image_file) return;
+                const { id, caption, size, name, mime, created_at, url } = image_file;
+                const newFile = {
+                    "_id": id,
+                    "title": caption,
+                    "size": size,
+                    "fileName": name,
+                    "type": mime,
+                    "createdAt": new Date(created_at),
+                    "thumbnailUrl": url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "")
+                }
+                mediaList.push(newFile);
+            })
+            this.setState({fileLibraryList: mediaList})
+            this.forceUpdate();
+        })
+    }
     uploadFileToS3 = (fileBase64, fileMeta) => {
         const buf = Buffer.from(fileBase64.replace(/^data:image\/\w+;base64,/, ""),'base64');
         const params = {
@@ -361,7 +386,34 @@ class ImageMapItems extends Component {
             })
         }
     uploadCallback = async (fileBase64, fileMeta) => {
-        this.uploadFileToS3(fileBase64, fileMeta);
+        /* convert fileBase64 to File object */
+        var arr = fileBase64.split(','),
+            mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), 
+            n = bstr.length, 
+            u8arr = new Uint8Array(n);
+            
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        const file = new File([u8arr], fileMeta.fileName, {type:mime});
+        /* ---------------------------------------------- */
+        let formData = new FormData();
+        formData.append('files.image_file', file, fileMeta.fileName);
+        axios({
+            method: 'post',
+            url: `${API_URL}/images`,
+            data: formData,
+            headers: {'Content-Type': 'multipart/form-data' }
+        })
+        .then(function (response) {
+            //handle success
+            console.log(response);
+        })
+        .catch(function (response) {
+            //handle error
+            console.log(response);
+        });
         return true;
     }
     deleteCallback = async (item) => {

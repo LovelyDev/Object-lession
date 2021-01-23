@@ -9,7 +9,7 @@ import FlowEditor from '../components/flow/FlowEditor';
 import FlowContainer from './FlowContainer';
 import HexGrid from '../components/hexgrid/HexGrid';
 import Projects from '../components/projects/Projects';
-import env from '../config/env';
+import { API_URL } from '../config/env';
 
 type EditorType = 'imagemap' | 'workflow' | 'flow' | 'hexgrid' | 'projects';
 
@@ -28,14 +28,14 @@ class App extends Component<any, IState> {
         projectName: null
 	};
     componentDidMount() {
-        axios.get("https://api.mathcurious.com/projects")
+        axios.get(`${API_URL}/projects`)
         .then(res => {
             this.setState({projects: res.data});
         })
     }
 	onChangeMenu = ({ key }) => {
         if (key === 'projects') {
-            axios.get("https://api.mathcurious.com/projects")
+            axios.get(`${API_URL}/projects`)
             .then(res => {
                 this.setState({projects: res.data});
             })
@@ -63,7 +63,7 @@ class App extends Component<any, IState> {
     }
 
     onAddProjectClick = (projectName) => () => {
-        axios.post("https://api.mathcurious.com/projects",
+        axios.post(`${API_URL}/projects`,
         {
             name: projectName
         })
@@ -78,7 +78,7 @@ class App extends Component<any, IState> {
     }
 
     onDeleteProjectClick = async (id) => {
-        await axios.delete(`${env.API_URL}${id}`);
+        await axios.delete(`${API_URL}/projects/${id}`);
         const { projects } = this.state;
         const newProjects = projects.filter(project => project.id !== id)
         this.setState({projects: [...newProjects]});
@@ -86,9 +86,9 @@ class App extends Component<any, IState> {
     }
 
     onDuplicateProjectClick = async (id) => {
-        const res = await axios.get(`${env.API_URL}${id}`);
+        const res = await axios.get(`${API_URL}/projects/${id}`);
         const { name, project_json } = res.data;
-        const copiedProject = await axios.post(`${env.API_URL}`, {
+        const copiedProject = await axios.post(`${API_URL}/projects`, {
             name: `<${name}> Copy`,
             project_json
         });
