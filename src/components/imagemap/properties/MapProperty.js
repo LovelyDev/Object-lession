@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Radio, Row, Col, InputNumber } from 'antd';
+import { Form, Input, Select, Radio, Row, Col, InputNumber } from 'antd';
 import i18n from 'i18next';
+const { Option } = Select;
 
 export default {
 	render(canvasRef, form, data) {
@@ -22,7 +23,19 @@ export default {
 						initialValue: data.name || '',
 					})(<Input />)}
 				</Form.Item>
-				<Form.Item label={i18n.t('common.layout')} colon={false}>
+                <Form.Item label={i18n.t('Card Type')} colon={false}>
+					{getFieldDecorator('card-type', {
+                        initialValue: data['card-type'] || null,
+                    })(<Select
+                        style={{ width: 200 }}
+                        placeholder="Card Type"
+                    >
+                        <Option value="select-answer">Select answer</Option>
+                        <Option value="drag-answer">Drag answer</Option>
+                        <Option value="drag-sum">Drag sum</Option>
+                    </Select>)}
+				</Form.Item>
+				{/* <Form.Item label={i18n.t('common.layout')} colon={false}>
 					{getFieldDecorator('layout', {
 						initialValue: layout,
 					})(
@@ -68,7 +81,7 @@ export default {
 							</Col>
 						</Row>
 					</React.Fragment>
-				) : null}
+				) : null} */}
 			</React.Fragment>
 		);
 	},

@@ -5,6 +5,7 @@ import classnames from 'classnames';
 
 import NodeProperties from './properties/NodeProperties';
 import MapProperties from './properties/MapProperties';
+import ProjectProperties from './properties/ProjectProperties';
 import Animations from './animations/Animations';
 import Styles from './styles/Styles';
 import DataSources from './datasources/DataSources';
@@ -32,7 +33,7 @@ class ImageMapConfigurations extends Component {
     }
 
 	state = {
-		activeKey: 'map',
+		activeKey: 'project',
 	};
 
 	handlers = {
@@ -81,6 +82,9 @@ class ImageMapConfigurations extends Component {
 					onChange={onChangeTab}
 					tabBarStyle={{ marginTop: 60 }}
 				>
+                    <Tabs.TabPane tab={<Icon name="toolbox" />} key="project">
+						<ProjectProperties onChange={onChange} canvasRef={canvasRef} />
+					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
 						<MapProperties onChange={onChange} canvasRef={canvasRef} />
 					</Tabs.TabPane>

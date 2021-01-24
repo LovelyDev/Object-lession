@@ -403,12 +403,15 @@ class ImageMapEditor extends Component {
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
-				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.originScaleToResize(
-					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea,
-					allValues.width,
-					allValues.height,
-				);
-				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.centerObject(this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea);
+                const { canvasRefs } = this.state;
+                canvasRefs.forEach(canvasRef => {
+                    canvasRef.canvasRef.handler.originScaleToResize(
+                        canvasRef.canvasRef.handler.workarea,
+                        allValues.width,
+                        allValues.height,
+                    );
+                    canvasRef.canvasRef.canvas.centerObject(canvasRef.canvasRef.handler.workarea);
+                })
 				return;
 			}
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea.set(changedKey, changedValue);

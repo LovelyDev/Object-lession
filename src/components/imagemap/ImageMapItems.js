@@ -301,7 +301,7 @@ class ImageMapItems extends Component {
         };
         this.myBucket.listObjects(params, (err, data) => {
             if (err) {} // an error occurred
-            else{
+            else {
 				let mediaList = [];
                 data.Contents.forEach((object, i) => {
                     const newFile = {
@@ -318,7 +318,6 @@ class ImageMapItems extends Component {
 				this.setState({fileLibraryList: mediaList})
                 this.forceUpdate();
             }
-        
         })
     }
     getAllImages = () => {
@@ -407,7 +406,6 @@ class ImageMapItems extends Component {
             data: formData,
             headers: {'Content-Type': 'multipart/form-data' }
         });
-        console.log("uploaded img", res);
         if (res.statusText === "OK") {
             const { image_file } = res.data;
             if (!image_file) return;
