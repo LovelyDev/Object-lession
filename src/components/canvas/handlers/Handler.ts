@@ -107,7 +107,9 @@ export interface HandlerCallback {
 	 * When canvas has been loaded
 	 *
 	 */
-	onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    
+    onMouseDown? :(target: any) => void;
 }
 
 export interface HandlerOption {
@@ -249,7 +251,8 @@ class Handler implements HandlerOptions {
 	public onRemove?: (target: FabricObject) => void;
 	public onTransaction?: (transaction: TransactionEvent) => void;
 	public onInteraction?: (interactionMode: InteractionMode) => void;
-	public onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    public onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    public onMouseDown?: (target: any) => void;
 
 	public imageHandler: ImageHandler;
 	public chartHandler: ChartHandler;
@@ -346,7 +349,8 @@ class Handler implements HandlerOptions {
 		this.onRemove = options.onRemove;
 		this.onTransaction = options.onTransaction;
 		this.onInteraction = options.onInteraction;
-		this.onLoad = options.onLoad;
+        this.onLoad = options.onLoad;
+        this.onMouseDown = options.onMouseDown;
 	};
 
 	/**

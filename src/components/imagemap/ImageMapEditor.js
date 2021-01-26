@@ -97,7 +97,8 @@ class ImageMapEditor extends Component {
             objects: undefined,
             canvasRefs: [{id: 0, canvasRef: null}],
             curCanvasRefId: 0,
-            projectName: ""
+            projectName: "",
+            confActiveTab: "project"
         };
     }
 	
@@ -175,7 +176,10 @@ class ImageMapEditor extends Component {
             this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.select(target);
 		},
 		onSelect: target => {
-			const { selectedItem } = this.state;
+            const { selectedItem } = this.state;
+            if (typeof target === 'undefined') {
+                this.setState({ confActiveTab: 'map' });
+            }
 			if (target && target.id && target.id !== 'workarea' && target.type !== 'activeSelection') {
 				if (selectedItem && target.id === selectedItem.id) {
 					return;
@@ -537,7 +541,12 @@ class ImageMapEditor extends Component {
 		},
 		onTransaction: transaction => {
 			this.forceUpdate();
-		},
+        },
+        onMouseDown: target => {
+            if (target.id === 'workarea') {
+                this.setState({ confActiveTab: 'map' });
+            }
+        }
 	};
 
 	handlers = {
@@ -708,6 +717,9 @@ class ImageMapEditor extends Component {
                 alert("Save project successfully");
             })
             
+        },
+        onChangeConfTab: (activeKey) => {
+            this.setState({ confActiveTab: activeKey });
         }
 	};
 
@@ -824,7 +836,8 @@ class ImageMapEditor extends Component {
 			editing,
 			descriptors,
             objects,
-            curCanvasRefId
+            curCanvasRefId,
+            confActiveTab
         } = this.state;
 		let { canvasRefs } = this.state;
 		const {
@@ -837,7 +850,8 @@ class ImageMapEditor extends Component {
 			onTooltip,
 			onClick,
 			onContext,
-			onTransaction,
+            onTransaction,
+            onMouseDown,
 		} = this.canvasHandlers;
 		const {
 			onChangePreview,
@@ -847,7 +861,8 @@ class ImageMapEditor extends Component {
 			onChangeStyles,
 			onChangeDataSources,
             onSaveImage,
-            onSaveProject
+            onSaveProject,
+            onChangeConfTab
         } = this.handlers;
 		const action = (
 			<React.Fragment>
@@ -966,7 +981,8 @@ class ImageMapEditor extends Component {
 							onTooltip={onTooltip}
 							onClick={onClick}
 							onContext={onContext}
-							onTransaction={onTransaction}
+                            onTransaction={onTransaction}
+                            onMouseDown={onMouseDown}
 							keyEvent={{
 								transaction: true,
 							}}
@@ -992,7 +1008,9 @@ class ImageMapEditor extends Component {
 					onChangeDataSources={onChangeDataSources}
 					animations={animations}
 					styles={styles}
-					dataSources={dataSources}
+                    dataSources={dataSources}
+                    confActiveTab={confActiveTab}
+                    onChangeTab={onChangeConfTab}
 				/>
 				<ImageMapPreview
 					preview={preview}

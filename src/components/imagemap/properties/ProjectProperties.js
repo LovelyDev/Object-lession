@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Collapse } from 'antd';
+import { Form, Card } from 'antd';
 
 import PropertyDefinition from './PropertyDefinition';
 import Scrollbar from '../../common/Scrollbar';
-
-const { Panel } = Collapse;
 
 class ProjectProperties extends Component {
 	static propTypes = {
@@ -14,24 +12,24 @@ class ProjectProperties extends Component {
 
 	render() {
 		const { canvasRef, form } = this.props;
-		const showArrow = false;
+		const showArrow = true;
 		if (canvasRef) {
 			return (
 				<Scrollbar>
 					<Form layout="horizontal">
-						<Collapse bordered={false}>
-							{Object.keys(PropertyDefinition.project).map(key => {
-								return (
-									<Panel key={key} header={PropertyDefinition.project[key].title} showArrow={showArrow}>
-										{PropertyDefinition.project[key].component.render(
-											canvasRef,
-											form,
-											canvasRef.handler.workarea,
-										)}
-									</Panel>
-								);
-							})}
-						</Collapse>
+                        {Object.keys(PropertyDefinition.project).map(key => {
+                            return (
+                                <div key={key} className="site-card-border-less-wrapper">
+                                    <Card key={key} title={PropertyDefinition.project[key].title}>
+                                        {PropertyDefinition.project[key].component.render(
+                                            canvasRef,
+                                            form,
+                                            canvasRef.handler.workarea,
+                                        )}
+                                    </Card>
+                                </div>
+                            );
+                        })}
 					</Form>
 				</Scrollbar>
 			);

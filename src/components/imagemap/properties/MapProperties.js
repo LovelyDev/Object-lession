@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Collapse } from 'antd';
+import { Form, Card } from 'antd';
 
 import PropertyDefinition from './PropertyDefinition';
 import Scrollbar from '../../common/Scrollbar';
-
-const { Panel } = Collapse;
 
 class MapProperties extends Component {
 	static propTypes = {
@@ -19,19 +17,19 @@ class MapProperties extends Component {
 			return (
 				<Scrollbar>
 					<Form layout="horizontal">
-						<Collapse bordered={false}>
-							{Object.keys(PropertyDefinition.map).map(key => {
-								return (
-									<Panel key={key} header={PropertyDefinition.map[key].title} showArrow={showArrow}>
-										{PropertyDefinition.map[key].component.render(
-											canvasRef,
-											form,
-											canvasRef.handler.workarea,
-										)}
-									</Panel>
-								);
-							})}
-						</Collapse>
+                        {Object.keys(PropertyDefinition.map).map(key => {
+                            return (
+                                <div key={key} className="site-card-border-less-wrapper">
+                                    <Card key={key} title={PropertyDefinition.map[key].title}>
+                                        {PropertyDefinition.map[key].component.render(
+                                            canvasRef,
+                                            form,
+                                            canvasRef.handler.workarea,
+                                        )}
+                                    </Card>
+                                </div>
+                            );
+                        })}
 					</Form>
 				</Scrollbar>
 			);

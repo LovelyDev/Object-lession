@@ -22,26 +22,26 @@ class ImageMapConfigurations extends Component {
 		onChangeDataSources: PropTypes.func,
 		animations: PropTypes.array,
 		styles: PropTypes.array,
-		dataSources: PropTypes.array,
+        dataSources: PropTypes.array,
+        confActiveTab: PropTypes.any,
+        onChangeTab: PropTypes.func
 	};
 
     shouldComponentUpdate(nextProps, nextState) {
+        const { onChangeTab } = this.props;
         if (this.props.selectedItem !== nextProps.selectedItem) {
-            this.setState({ activeKey: 'node' });
+            if (!nextProps.selectedItem) {
+                onChangeTab('map');
+            } else {
+                onChangeTab('node');
+            }
         }
         return true;
     }
-
-	state = {
-		activeKey: 'project',
-	};
-
+    state = {
+        collapse: false,
+    };
 	handlers = {
-		onChangeTab: activeKey => {
-			this.setState({
-				activeKey,
-			});
-		},
 		onCollapse: () => {
 			this.setState({
 				collapse: !this.state.collapse,
@@ -59,10 +59,12 @@ class ImageMapConfigurations extends Component {
 			dataSources,
 			onChangeAnimations,
 			onChangeStyles,
-			onChangeDataSources,
+            onChangeDataSources,
+            confActiveTab
 		} = this.props;
-		const { collapse, activeKey } = this.state;
-		const { onChangeTab, onCollapse } = this.handlers;
+		const { collapse } = this.state;
+        const { onCollapse } = this.handlers;
+        const { onChangeTab } = this.props;
 		const className = classnames('rde-editor-configurations', {
 			minimize: collapse,
 		});
@@ -78,7 +80,7 @@ class ImageMapConfigurations extends Component {
 				<Tabs
 					tabPosition="right"
 					style={{ height: '100%' }}
-					activeKey={activeKey}
+					activeKey={confActiveTab}
 					onChange={onChangeTab}
 					tabBarStyle={{ marginTop: 60 }}
 				>
