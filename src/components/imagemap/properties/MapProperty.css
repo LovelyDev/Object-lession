@@ -1,0 +1,5 @@
+.card-attribute-row {
+    display: flex !important;
+    align-items: center;
+    margin-bottom: 15px;
+}

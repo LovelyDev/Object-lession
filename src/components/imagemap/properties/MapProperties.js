@@ -9,9 +9,22 @@ class MapProperties extends Component {
 	static propTypes = {
 		canvasRef: PropTypes.any,
 	};
-
+    shouldComponentUpdate(nextProps, nextState) {
+        if (this.props.canvasRef !== nextProps.canvasRef) {
+            const data = nextProps.canvasRef.handler.workarea;
+            this.props.form.setFieldsValue({
+                name: data.name,
+                'card-type': data['card-type'],
+                'correct-answer': data['correct-answer'],
+                'drag-destination': data['drag-destination'],
+                'correct-animation': data['correct-animation'],
+                'wrong-animation': data['wrong-animation']
+            })
+        }
+        return true;
+    }
 	render() {
-		const { canvasRef, form } = this.props;
+		const { canvasRef, form, animations } = this.props;
 		const showArrow = false;
 		if (canvasRef) {
 			return (
@@ -25,6 +38,7 @@ class MapProperties extends Component {
                                             canvasRef,
                                             form,
                                             canvasRef.handler.workarea,
+                                            animations
                                         )}
                                     </Card>
                                 </div>
@@ -40,7 +54,7 @@ class MapProperties extends Component {
 
 export default Form.create({
 	onValuesChange: (props, changedValues, allValues) => {
-		const { onChange, selectedItem } = props;
-		onChange(selectedItem, changedValues, { workarea: allValues });
+        const { onChange, selectedItem } = props;
+        onChange(selectedItem, changedValues, { workarea: allValues });
 	},
 })(MapProperties);

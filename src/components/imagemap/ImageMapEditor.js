@@ -98,12 +98,16 @@ class ImageMapEditor extends Component {
             canvasRefs: [{id: 0, canvasRef: null}],
             curCanvasRefId: 0,
             projectName: "",
-            confActiveTab: "project"
+            confActiveTab: "project",
+            width: 600,
+            height: 400,
+            coverImage: './images/sample/transparentBg.png',
         };
     }
 	
 
 	componentDidMount() {
+        console.log("imagemap mounted");
 		this.showLoading(true);
 		import('./Descriptors.json').then(descriptors => {
 			this.setState(
@@ -126,18 +130,27 @@ class ImageMapEditor extends Component {
             getData(`/projects/${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
-                let objectsList = null, animations = [], styles = [], dataSources = [];
+                let objectsList = null, animations = [], styles = [], dataSources = [],
+                width = 400,
+                height = 600,
+                coverImage = './images/sample/transparentBg.png';
                 if (project_json) {
                     objectsList = project_json.objectsList;
                     animations = project_json.animations;
                     styles = project_json.styles;
                     dataSources = project_json.dataSources;
+                    width = project_json.width || 600;
+                    height = project_json.height || 400;
+                    coverImage = project_json.coverImage || './images/sample/transparentBg.png';
                 }
                 this.setState({
                     animations,
                     styles,
                     dataSources,
-                    projectName: name
+                    projectName: name,
+                    width,
+                    height,
+                    coverImage
                 });
                 if (objectsList) {
                     const newCanvasRefs = objectsList.map((page, i) => {
@@ -177,9 +190,6 @@ class ImageMapEditor extends Component {
 		},
 		onSelect: target => {
             const { selectedItem } = this.state;
-            if (typeof target === 'undefined') {
-                this.setState({ confActiveTab: 'map' });
-            }
 			if (target && target.id && target.id !== 'workarea' && target.type !== 'activeSelection') {
 				if (selectedItem && target.id === selectedItem.id) {
 					return;
@@ -232,7 +242,11 @@ class ImageMapEditor extends Component {
 				this.changeEditing(true);
 			}
 			const changedKey = Object.keys(changedValues)[0];
-			const changedValue = changedValues[changedKey];
+            const changedValue = changedValues[changedKey];
+            if (allValues.project) {
+				this.canvasHandlers.onProjectWokarea(changedKey, changedValue, allValues.project);
+				return;
+			}
 			if (allValues.workarea) {
 				this.canvasHandlers.onChangeWokarea(changedKey, changedValue, allValues.workarea);
 				return;
@@ -394,10 +408,11 @@ class ImageMapEditor extends Component {
 					console.error(error);
 				}
 				return;
-			}
+            }
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue);
 		},
 		onChangeWokarea: (changedKey, changedValue, allValues) => {
+            console.log("onChangeWokarea", changedKey, changedValue, allValues);
 			if (changedKey === 'layout') {
 				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setLayout(changedValue);
 				return;
@@ -417,9 +432,29 @@ class ImageMapEditor extends Component {
                     canvasRef.canvasRef.canvas.centerObject(canvasRef.canvasRef.handler.workarea);
                 })
 				return;
-			}
+            }
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea.set(changedKey, changedValue);
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.requestRenderAll();
+        },
+        onProjectWokarea: (changedKey, changedValue, allValues) => {
+			if (changedKey === 'width' || changedKey === 'height') {
+                const { canvasRefs } = this.state;
+                canvasRefs.forEach(canvasRef => {
+                    canvasRef.canvasRef.handler.originScaleToResize(
+                        canvasRef.canvasRef.handler.workarea,
+                        allValues.width,
+                        allValues.height,
+                    );
+                    canvasRef.canvasRef.canvas.centerObject(canvasRef.canvasRef.handler.workarea);
+                })
+                this.setState({ width: allValues.width, height: allValues.height });
+				return;
+            }
+            console.log("onProjectWokarea", changedKey);
+            if (changedKey === 'cover-image') {
+                console.log("onProjectWokarea cover-image", changedValue);
+                this.setState({ coverImage: changedValue });
+            }
 		},
 		onTooltip: (ref, target) => {
 			const value = Math.random() * 10 + 1;
@@ -582,11 +617,14 @@ class ImageMapEditor extends Component {
 						}
 					};
 					reader.onload = e => {
-                        const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
+                        const { objectsList, animations, styles, dataSources, width, height, coverImage } = JSON.parse(e.target.result);
 						this.setState({
 							animations,
 							styles,
-							dataSources
+                            dataSources,
+                            width: width || 600,
+                            height: height || 400,
+                            coverImage: coverImage || './images/sample/transparentBg.png'
 						});
 						if (objectsList) {
 							const newCanvasRefs = objectsList.map((page, i) => {
@@ -638,12 +676,15 @@ class ImageMapEditor extends Component {
 				});
 				return {id: canvasRef.id, objects};
 			})
-			const { animations, styles, dataSources } = this.state;
+			const { animations, styles, dataSources, width, height, coverImage } = this.state;
 			const exportDatas = {
 				objectsList,
 				animations,
 				styles,
-				dataSources,
+                dataSources,
+                width,
+                height,
+                coverImage
             };
 			const anchorEl = document.createElement('a');
 			anchorEl.href = `data:text/json;charset=utf-8,${encodeURIComponent(
@@ -694,12 +735,22 @@ class ImageMapEditor extends Component {
 				});
 				return {id: canvasRef.id, objects};
 			})
-			const { animations, styles, dataSources, curCanvasRefId } = this.state;
+            const { animations, 
+                styles, 
+                dataSources, 
+                curCanvasRefId, 
+                width,
+                height,
+                coverImage
+            } = this.state;
 			const exportDatas = {
 				objectsList,
 				animations,
 				styles,
-				dataSources,
+                dataSources,
+                width,
+                height,
+                coverImage
             };
             const { projectId } = this.props;
             if (!projectId) {
@@ -837,7 +888,10 @@ class ImageMapEditor extends Component {
 			descriptors,
             objects,
             curCanvasRefId,
-            confActiveTab
+            confActiveTab,
+            width,
+            height,
+            coverImage
         } = this.state;
 		let { canvasRefs } = this.state;
 		const {
@@ -864,6 +918,11 @@ class ImageMapEditor extends Component {
             onSaveProject,
             onChangeConfTab
         } = this.handlers;
+        const projectConf = {
+            width,
+            height,
+            coverImage,
+        }
 		const action = (
 			<React.Fragment>
                 <CommonButton
@@ -1011,6 +1070,7 @@ class ImageMapEditor extends Component {
                     dataSources={dataSources}
                     confActiveTab={confActiveTab}
                     onChangeTab={onChangeConfTab}
+                    projectConf={projectConf}
 				/>
 				<ImageMapPreview
 					preview={preview}

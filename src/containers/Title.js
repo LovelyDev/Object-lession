@@ -44,11 +44,13 @@ class Title extends Component {
             password: "twentyaugust",
         });
         if(res?.data?.jwt) {
+            console.log("api success and get token", res.data.jwt)
             // const token = encodeURI(res.data.jwt).replaceAll('.', "%2E").replaceAll('-', "%2D");
             const token = res.data.jwt;
-            console.log("encoded token", token);
-            let { history } = this.props;
-            history.push(`/login/${token}`);
+            // console.log("encoded token", token);
+            // let { history } = this.props;
+            // history.push(`/login/${token}`);
+            localStorage.setItem('Token', token);
         }
     }
 	render() {

@@ -64,7 +64,7 @@ class ImageMapConfigurations extends Component {
 		} = this.props;
 		const { collapse } = this.state;
         const { onCollapse } = this.handlers;
-        const { onChangeTab } = this.props;
+        const { onChangeTab, projectConf } = this.props;
 		const className = classnames('rde-editor-configurations', {
 			minimize: collapse,
 		});
@@ -85,10 +85,10 @@ class ImageMapConfigurations extends Component {
 					tabBarStyle={{ marginTop: 60 }}
 				>
                     <Tabs.TabPane tab={<Icon name="toolbox" />} key="project">
-						<ProjectProperties onChange={onChange} canvasRef={canvasRef} />
+						<ProjectProperties onChange={onChange} projectConf={projectConf} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
-						<MapProperties onChange={onChange} canvasRef={canvasRef} />
+						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cogs" />} key="node">
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />

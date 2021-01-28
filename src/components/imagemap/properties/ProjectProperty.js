@@ -2,8 +2,13 @@ import React from 'react';
 import { Form, Input, Select, Radio, Row, Col, InputNumber } from 'antd';
 import i18n from 'i18next';
 
+import { CommonButton } from '../../common';
+import './ProjectProperty.css';
+
+
+
 export default {
-	render(canvasRef, form, data) {
+	render(form, data, onEditCoverImgClick) {
 		const { getFieldDecorator } = form;
 		if (!data) {
 			return null;
@@ -23,7 +28,7 @@ export default {
                                         }),
                                     },
                                 ],
-                                initialValue: data.width * data.scaleX,
+                                initialValue: data.width,
                             })(<InputNumber />)}
                         </Form.Item>
                     </Col>
@@ -38,11 +43,30 @@ export default {
                                         }),
                                     },
                                 ],
-                                initialValue: data.height * data.scaleY,
+                                initialValue: data.height,
                             })(<InputNumber />)}
                         </Form.Item>
                     </Col>
                 </Row>
+                <div className="project-cover-image-panel">
+                    <Row>
+                        <span>Cover Image</span>
+                    </Row>
+                    <Row className="project-cover-image-panel-body">
+                        <div className="project-cover-image">
+                            <img src={data.coverImage}/>
+                        </div>
+                        <CommonButton
+                            className="rde-action-btn"
+                            shape="circle"
+                            icon="edit"
+                            tooltipTitle={i18n.t('Edit')}
+                            style={{fontSize: 35, height: "auto", marginLeft: 10}}
+                            onClick={onEditCoverImgClick}
+                        />
+                    </Row>
+                </div>
+                
 			</React.Fragment>
 		);
 	},

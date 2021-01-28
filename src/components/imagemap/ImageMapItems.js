@@ -401,12 +401,13 @@ class ImageMapItems extends Component {
         /* ---------------------------------------------- */
         let formData = new FormData();
 		formData.append('files.image_file', file, fileMeta.fileName);
-		formData.append('data', JSON.stringify({}));
+        formData.append('data', JSON.stringify({}));
+        const token = localStorage.getItem('Token');
         const res = await axios({
             method: 'post',
             url: `${API_URL}/images`,
             data: formData,
-            headers: {'Content-Type': 'multipart/form-data' }
+            headers: {'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
         });
         if (res.statusText === "OK") {
             const { image_file } = res.data;
