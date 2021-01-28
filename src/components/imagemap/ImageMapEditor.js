@@ -3,7 +3,6 @@ import { Badge, Button, Popconfirm, Menu, Input } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
-import axios from 'axios';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -19,7 +18,8 @@ import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
-import { API_URL } from '../../config/env';
+import axios from '../../config/axios';
+const { getData, postData, putData, deleteData } = axios;
 
 const propertiesToInclude = [
 	'id',
@@ -123,7 +123,7 @@ class ImageMapEditor extends Component {
         if (projectId) {
             this.showLoading(true);
             this.forceUpdate();
-            axios.get(`${API_URL}/projects/${projectId}`)
+            getData(`/projects/${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
                 let objectsList = null, animations = [], styles = [], dataSources = [];
@@ -706,7 +706,7 @@ class ImageMapEditor extends Component {
                 this.showLoading(false);
                 return;
             }
-            axios.put(`${API_URL}/projects/${projectId}`, {
+            putData(`/projects/${projectId}`, {
                 name: this.state.projectName,
                 project_json: exportDatas
             })

@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { Button, Menu, Tooltip, Modal } from 'antd';
 import PropTypes from 'prop-types';
 import i18n from 'i18next';
-
+import axios from 'axios';
 import { Flex } from '../components/flex';
 import Icon from '../components/icon/Icon';
 import { ShortcutHelp } from '../components/help';
+import { API_URL } from '../config/env';
 
 class Title extends Component {
 	static propTypes = {
@@ -36,10 +38,22 @@ class Title extends Component {
 			});
 		},
 	};
-
+    onLogin = async () => {
+        const res = await axios.post(`${API_URL}/auth/local`, {
+            identifier: "lovely2187dev@outlook.com",
+            password: "twentyaugust",
+        });
+        if(res?.data?.jwt) {
+            // const token = encodeURI(res.data.jwt).replaceAll('.', "%2E").replaceAll('-', "%2D");
+            const token = res.data.jwt;
+            console.log("encoded token", token);
+            let { history } = this.props;
+            history.push(`/login/${token}`);
+        }
+    }
 	render() {
         const { visible } = this.state;
-        const { projectName } = this.props;
+        const { projectName, history } = this.props;
 		return (
 			<Flex
 				style={{ background: 'linear-gradient(141deg,#23303e,#404040 51%,#23303e 75%)' }}
@@ -107,6 +121,9 @@ class Title extends Component {
 						<Menu.Item key="projects" style={{ color: '#fff' }}>
 							{i18n.t('Projects')}
 						</Menu.Item>
+                        <Menu.Item key="login" style={{ color: '#fff' }} onClick={this.onLogin}>
+							{i18n.t('Login')}
+						</Menu.Item>
 						{/* <Menu.Item key="flow" style={{ color: '#fff' }}>{i18n.t('flow.flow')}</Menu.Item> */}
 						{/* <Menu.Item key="hexgrid" style={{ color: '#fff' }}>
 							{i18n.t('hexgrid.hexgrid')}
@@ -135,4 +152,4 @@ class Title extends Component {
 	}
 }
 
-export default Title;
+export default withRouter(Title);

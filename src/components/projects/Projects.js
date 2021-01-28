@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { Input } from 'antd';
 import i18n from 'i18next';
 import { CommonButton } from '../common';
@@ -31,6 +32,7 @@ class Project extends Component {
     render() {
         const { name, onProjectClick } = this.props;
         const { id } = this.props;
+        let { history } = this.props;
         return (
             <div className="project-item">
                 <div className="project-item-header">
@@ -40,7 +42,10 @@ class Project extends Component {
                         icon="arrow-right"
                         tooltipTitle={i18n.t('Display')}
                         style={{fontSize: 35, height: "auto", margin: "0 10px 0 0"}}
-                        onClick={onProjectClick(id)}
+                        onClick={() => {
+                            onProjectClick(id);
+                            history.push(`/projects/${id}`);
+                        }}
                     />
                 </div>
                 <div className="project-item-content">
@@ -80,7 +85,9 @@ class Projects extends Component {
         this.setState({ loading: status });
     }
     render() {
-        const { projects, onProjectClick, onAddProjectClick, onDeleteProjectClick, onDuplicateProjectClick } = this.props;
+        const { onProjectClick, onAddProjectClick, onDeleteProjectClick, onDuplicateProjectClick } = this.props;
+        const { projects } = this.props;
+        let { history } = this.props;
         const { loading } = this.state;
         const title = (
             <div className="project-list-header">
@@ -111,6 +118,7 @@ class Projects extends Component {
                                     onDeleteProjectClick={onDeleteProjectClick}
                                     onDuplicateProjectClick={onDuplicateProjectClick}
                                     showLoading={this.showLoading}
+                                    history={history}
                                 />)
                             }
                         </div>
@@ -122,4 +130,4 @@ class Projects extends Component {
     }
 }
 
-export default Projects;
+export default withRouter(Projects);

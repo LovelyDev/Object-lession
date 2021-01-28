@@ -15,6 +15,8 @@ import { SVGModal } from '../common';
 import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
 import { s3 } from './config/aws';
 import { API_URL } from '../../config/env';
+import axiosInstance from '../../config/axios';
+const { getData, postData, putData, deleteData } = axiosInstance;
 
 notification.config({
 	top: 80,
@@ -321,7 +323,7 @@ class ImageMapItems extends Component {
         })
     }
     getAllImages = () => {
-        axios.get(`${API_URL}/images`)
+        getData('/images')
         .then(res => {
             let mediaList = [];
             res.data.forEach(img => {
