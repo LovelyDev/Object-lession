@@ -438,6 +438,8 @@ class ImageMapItems extends Component {
         const id = v4();
         let option = Object.assign({}, imageItem.option, { id });
         option.src = item.thumbnailUrl;
+        console.log("onSelectCallback on medialibrary", option, item);
+        option.object_name = item.fileName.replace(/\.[^/.]+$/, "");
         canvasRef.handler.add(option, centered);
         this.forceUpdate();
     }

@@ -26,7 +26,6 @@ class MapProperties extends Component {
 	render() {
 		const { canvasRef, form, animations } = this.props;
         const showArrow = false;
-        //
 		if (canvasRef) {
 			return (
 				<Scrollbar>

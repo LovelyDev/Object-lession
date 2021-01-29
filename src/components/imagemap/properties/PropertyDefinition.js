@@ -30,7 +30,7 @@ export default {
 			component: MapProperty,
 		},
 		image: {
-			title: 'Image',
+			title: 'Background Image',
 			component: ImageProperty,
 		},
 	},
