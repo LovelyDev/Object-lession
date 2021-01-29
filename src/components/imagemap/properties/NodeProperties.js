@@ -121,6 +121,7 @@ class NodeProperties extends Component {
         const showArrow = false;
         const  { getFieldDecorator } = form;
         const data = selectedItem;
+        const workarea = canvasRef.handler.workarea;
 		return (
 			<Scrollbar>
 				<Form layout="horizontal" colon={false}>
@@ -194,7 +195,7 @@ class NodeProperties extends Component {
                                             message: 'Please input x position',
                                         },
                                     ],
-                                    initialValue: data.left,
+                                    initialValue: parseInt(data.left - workarea.left),
                                 })(<InputNumber disabled={true} />)}
                             </Form.Item>
                         </Col>
@@ -207,7 +208,7 @@ class NodeProperties extends Component {
                                             message: 'Please input y position',
                                         },
                                     ],
-                                    initialValue: data.top,
+                                    initialValue: parseInt(data.top - workarea.top),
                                 })(<InputNumber disabled={true} />)}
                             </Form.Item>
                         </Col>
