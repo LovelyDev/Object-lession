@@ -89,5 +89,7 @@ export const propertiesToInclude = [
     'correct-answer',
     'drag-destination',
     'correct-animation',
-    'wrong-animation'
+    'wrong-animation',
+    'posX',
+    'posY',
 ];

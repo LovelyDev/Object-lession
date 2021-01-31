@@ -1,48 +1,31 @@
 import React from 'react';
-import { Form, Radio } from 'antd';
+import { Row } from 'antd';
 import i18n from 'i18next';
-
-import UrlModal from '../../common/UrlModal';
-import FileUpload from '../../common/FileUpload';
+import CommonButton from '../../common/CommonButton';
+import './ImageProperty.css'
 
 export default {
-	render(canvasRef, form, data) {
-		const { getFieldDecorator } = form;
+	render(canvasRef, form, data, animations, onEditBackgroundImgClick) {
 		if (!data) {
 			return null;
 		}
-		const imageLoadType = data.imageLoadType || 'file';
 		return (
 			<React.Fragment>
-				<Form.Item label={i18n.t('imagemap.image.image-load-type')} colon={false}>
-					{getFieldDecorator('imageLoadType', {
-						initialValue: imageLoadType,
-					})(
-						<Radio.Group size="small">
-							<Radio.Button value="file">{i18n.t('imagemap.image.file-upload')}</Radio.Button>
-							<Radio.Button value="src">{i18n.t('imagemap.image.image-url')}</Radio.Button>
-						</Radio.Group>,
-					)}
-				</Form.Item>
-				{imageLoadType === 'file' ? (
-					<Form.Item label={i18n.t('common.file')} colon={false}>
-						{getFieldDecorator('file', {
-							rules: [
-								{
-									required: true,
-									message: i18n.t('validation.enter-property', { arg: i18n.t('common.file') }),
-								},
-							],
-							initialValue: data.file,
-						})(<FileUpload accept="image/*" />)}
-					</Form.Item>
-				) : (
-					<Form.Item>
-						{getFieldDecorator('src', {
-							initialValue: data.src,
-						})(<UrlModal form={form} />)}
-					</Form.Item>
-				)}
+				<div className="background-image-panel">
+                    <Row className="background-image-panel-body">
+                        <div className="background-image">
+                            <img src={data.src}/>
+                        </div>
+                        <CommonButton
+                            className="rde-action-btn"
+                            shape="circle"
+                            icon="edit"
+                            tooltipTitle={i18n.t('Edit')}
+                            style={{fontSize: 35, height: "auto", marginLeft: 10}}
+                            onClick={onEditBackgroundImgClick}
+                        />
+                    </Row>
+                </div>
 			</React.Fragment>
 		);
 	},

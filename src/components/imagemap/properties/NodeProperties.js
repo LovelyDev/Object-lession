@@ -13,13 +13,6 @@ const { Panel } = Collapse;
 class NodeProperties extends Component {
     constructor(props) {
         super(props);
-        const { selectedItem } = this.props;
-        this.state = {
-            object_name: selectedItem && !Array.isArray(selectedItem) ? selectedItem.object_name : "",
-            dragabble: selectedItem && !Array.isArray(selectedItem) ? selectedItem.dragabble : false,
-            clone_on_drag: selectedItem && !Array.isArray(selectedItem) ? selectedItem.clone_on_drag : false,
-            return_on_drag: selectedItem && !Array.isArray(selectedItem) ? selectedItem.return_on_drag : false
-        }
     }
 	static propTypes = {
 		canvasRef: PropTypes.any,
@@ -32,20 +25,6 @@ class NodeProperties extends Component {
 				nextProps.form.resetFields();
 			}
 		}
-	}
-    shouldComponentUpdate(nextProps, nextState) {
-        if (nextProps.selectedItem) {
-            if (this.props.selectedItem !== nextProps.selectedItem) {
-                const { selectedItem } = nextProps;
-                this.setState({
-                    object_name: Array.isArray(selectedItem) ? "" : selectedItem.object_name,
-                    dragabble: Array.isArray(selectedItem) ? false : selectedItem.dragabble,
-                    clone_on_drag: Array.isArray(selectedItem) ? false : selectedItem.clone_on_drag,
-                    return_on_drag: Array.isArray(selectedItem) ? false : selectedItem.return_on_drag
-                })
-            }
-        }
-        return true
     }
 	// render() {
 	// 	const { canvasRef, selectedItem, form } = this.props;
@@ -90,38 +69,26 @@ class NodeProperties extends Component {
 	// 		</Scrollbar>
 	// 	);
     // }
-    onAttributeChange = (type) => (e) => {
-        let { selectedItem } = this.props;
-        if (type === 'name') {
-            const value = e.target.value;
-            this.setState({ object_name: value });
-            if (Array.isArray(selectedItem)) {
-                selectedItem.forEach(item => item['object_name'] = value)
-                return ;
-            }
-            selectedItem['object_name'] = value;
-        } else if (type === 'check') {
-            const value = e.target.checked;
-            this.setState({ [e.target.name]: value });
-            if (Array.isArray(selectedItem)) {
-                selectedItem.forEach(item => item[e.target.name] = value)
-                return ;
-            }
-            selectedItem[e.target.name] = value;
-        }
-    }
     render() {
-        const { canvasRef, selectedItem, form } = this.props;
-        const {
-            object_name,
-            dragabble,
-            clone_on_drag,
-            return_on_drag
-        } = this.state;
+        const { canvasRef, form } = this.props;
+        let { selectedItem } = this.props;
         const showArrow = false;
         const  { getFieldDecorator } = form;
-        const data = selectedItem;
-        const workarea = canvasRef.handler.workarea;
+        let data, workarea;
+        if (selectedItem) {
+            data = selectedItem;
+            workarea = canvasRef.handler.workarea;
+            if (Array.isArray(selectedItem)) {
+                selectedItem.forEach(item => {
+                    item['posX'] = parseInt(item.left - workarea.left);
+                    item['posY'] = parseInt(item.top - workarea.top);
+                })
+            } else {
+                selectedItem['posX'] = parseInt(selectedItem.left - workarea.left);
+                selectedItem['posY'] = parseInt(selectedItem.top - workarea.top);
+            }
+        }
+        
 		return (
 			<Scrollbar>
 				<Form layout="horizontal" colon={false}>
