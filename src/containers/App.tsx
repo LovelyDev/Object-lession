@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ImageMapEditor from '../components/imagemap/ImageMapEditor';
 import WorkflowEditor from '../components/workflow/WorkflowEditor';
 import Title from './Title';
@@ -189,11 +190,23 @@ class App extends Component<any, IState> {
                                 <Route exact path="/projects/:id" component={() => <ProjectForId onGetProjectId={this.onGetProjectId} />} />
                                 <Route path="/" component={() => this.renderEditor(activeEditor)} />
                             </Switch>
+                            
                         </div>
                     </FlowContainer>
+                    <ToastContainer
+                        position="bottom-center"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
                 </Router>
 			</div>
-		);
+        );
 	}
 }
 

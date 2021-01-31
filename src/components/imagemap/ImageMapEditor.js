@@ -3,6 +3,7 @@ import { Badge, Button, Popconfirm, Menu, Input } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
+import { toast } from 'react-toastify';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -765,7 +766,7 @@ class ImageMapEditor extends Component {
                 const { onProjectNameChange } = this.props;
                 onProjectNameChange(this.state.projectName);
                 this.showLoading(false);
-                alert("Save project successfully");
+                toast.success("Save project successfully");
             })
             
         },
