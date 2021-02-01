@@ -6,4 +6,7 @@ public/fonts
 dist/
 lib/
 .vscode/
-docs/
+docs/docs
+docs/fonts
+docs/images
+docs/js
