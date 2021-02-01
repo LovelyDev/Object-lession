@@ -30,8 +30,10 @@ module.exports = merge(baseConfig, {
 		port: devPort,
 		contentBase: path.resolve(__dirname, 'public'),
 		hot: true,
-		publicPath: '/',
-		historyApiFallback: true,
+		publicPath: '/',		
+		historyApiFallback: {
+			disableDotRule: true
+		},
 		host,
 		proxy: {
 			'/api': {
