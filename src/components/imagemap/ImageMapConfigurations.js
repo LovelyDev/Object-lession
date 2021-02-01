@@ -5,6 +5,7 @@ import classnames from 'classnames';
 
 import NodeProperties from './properties/NodeProperties';
 import MapProperties from './properties/MapProperties';
+import ProjectProperties from './properties/ProjectProperties';
 import Animations from './animations/Animations';
 import Styles from './styles/Styles';
 import DataSources from './datasources/DataSources';
@@ -21,19 +22,26 @@ class ImageMapConfigurations extends Component {
 		onChangeDataSources: PropTypes.func,
 		animations: PropTypes.array,
 		styles: PropTypes.array,
-		dataSources: PropTypes.array,
+        dataSources: PropTypes.array,
+        confActiveTab: PropTypes.any,
+        onChangeTab: PropTypes.func
 	};
 
-	state = {
-		activeKey: 'map',
-	};
-
+    shouldComponentUpdate(nextProps, nextState) {
+        const { onChangeTab } = this.props;
+        if (this.props.selectedItem !== nextProps.selectedItem) {
+            if (!nextProps.selectedItem) {
+                onChangeTab('map');
+            } else {
+                onChangeTab('node');
+            }
+        }
+        return true;
+    }
+    state = {
+        collapse: false,
+    };
 	handlers = {
-		onChangeTab: activeKey => {
-			this.setState({
-				activeKey,
-			});
-		},
 		onCollapse: () => {
 			this.setState({
 				collapse: !this.state.collapse,
@@ -51,10 +59,12 @@ class ImageMapConfigurations extends Component {
 			dataSources,
 			onChangeAnimations,
 			onChangeStyles,
-			onChangeDataSources,
+            onChangeDataSources,
+            confActiveTab
 		} = this.props;
-		const { collapse, activeKey } = this.state;
-		const { onChangeTab, onCollapse } = this.handlers;
+		const { collapse } = this.state;
+        const { onCollapse } = this.handlers;
+        const { onChangeTab, projectConf } = this.props;
 		const className = classnames('rde-editor-configurations', {
 			minimize: collapse,
 		});
@@ -70,12 +80,15 @@ class ImageMapConfigurations extends Component {
 				<Tabs
 					tabPosition="right"
 					style={{ height: '100%' }}
-					activeKey={activeKey}
+					activeKey={confActiveTab}
 					onChange={onChangeTab}
 					tabBarStyle={{ marginTop: 60 }}
 				>
+                    <Tabs.TabPane tab={<Icon name="toolbox" />} key="project">
+						<ProjectProperties onChange={onChange} projectConf={projectConf} />
+					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
-						<MapProperties onChange={onChange} canvasRef={canvasRef} />
+						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cogs" />} key="node">
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />

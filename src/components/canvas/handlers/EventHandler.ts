@@ -354,7 +354,7 @@ class EventHandler {
 	 * @returns
 	 */
 	public mousedown = (opt: FabricEvent) => {
-		const event = opt as FabricEvent<MouseEvent>;
+        const event = opt as FabricEvent<MouseEvent>;
 		const { editable } = this.handler;
 		if (event.e.altKey && editable && !this.handler.interactionHandler.isDrawingMode()) {
 			this.handler.interactionHandler.grab();
@@ -365,7 +365,11 @@ class EventHandler {
 			this.panning = true;
 			return;
 		}
-		const { target } = event;
+        const { target } = event;
+        if (target.id === 'workarea') {
+            const { onMouseDown } = this.handler;
+            onMouseDown(target);
+        }
 		if (editable) {
 			if (this.handler.prevTarget && this.handler.prevTarget.superType === 'link') {
 				this.handler.prevTarget.set({

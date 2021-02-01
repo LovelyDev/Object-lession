@@ -7,35 +7,19 @@ import PropertyDefinition from './PropertyDefinition';
 import Scrollbar from '../../common/Scrollbar';
 import { API_URL } from '../../../config/env';
 import axiosInstance from '../../../config/axios';
+
 const { getData, postData, putData, deleteData } = axiosInstance;
 
-class MapProperties extends Component {
-    static propTypes = {
-		canvasRef: PropTypes.any,
-    };
+class ProjectProperties extends Component {
     constructor(props) {
         super(props);
-    }
-    state = {
-        rmlDisplay: false,
-        fileLibraryList: [],
-    };
-	componentDidMount() {
-        this.getAllImages();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        if (this.props.canvasRef !== nextProps.canvasRef) {
-            const data = nextProps.canvasRef.handler.workarea;
-            this.props.form.setFieldsValue({
-                name: data.name,
-                'card-type': data['card-type'],
-                'correct-answer': data['correct-answer'],
-                'drag-destination': data['drag-destination'],
-                'correct-animation': data['correct-animation'],
-                'wrong-animation': data['wrong-animation']
-            })
+        this.state = {
+            rmlDisplay: false,
+            fileLibraryList: [],
         }
-        return true;
+    }
+    componentDidMount() {
+        this.getAllImages();
     }
     getAllImages = () => {
         getData('/images')
@@ -108,40 +92,36 @@ class MapProperties extends Component {
     selectCallback = (item) => {
         const { onChange } = this.props;
         this.setState({rmlDisplay: false});
-        onChange(null, {'src': item.thumbnailUrl}, {workarea: {'src': item.thumbnailUrl}})
-        console.log("card background selected", item.thumbnailUrl);
+        onChange(null, {'cover-image': item.thumbnailUrl}, {project: {'cover-image': item.thumbnailUrl}})
+        console.log("cover-image selected", item.thumbnailUrl);
         this.forceUpdate();
     }
-    onEditBackgroundImgClick = () => {
+    onEditCoverImgClick = () => {
         this.setState({ rmlDisplay: true });
         this.forceUpdate();
     }
 	render() {
-        const { canvasRef, form, animations } = this.props;
-        const { rmlDisplay, fileLibraryList } = this.state;
-        const showArrow = false;
-		if (canvasRef) {
-			return (
-                <>
-				<Scrollbar>
-					<Form layout="horizontal">
-                        {Object.keys(PropertyDefinition.map).map(key => {
+        const { projectConf, form } = this.props;
+        const { fileLibraryList, rmlDisplay } = this.state;
+		const showArrow = true;
+        return <>
+                <Scrollbar>
+                    <Form layout="horizontal">
+                        {Object.keys(PropertyDefinition.project).map(key => {
                             return (
                                 <div key={key} className="site-card-border-less-wrapper">
-                                    <Card key={key} title={PropertyDefinition.map[key].title}>
-                                        {PropertyDefinition.map[key].component.render(
-                                            canvasRef,
+                                    <Card key={key} title={PropertyDefinition.project[key].title}>
+                                        {PropertyDefinition.project[key].component.render(
                                             form,
-                                            canvasRef.handler.workarea,
-                                            animations,
-                                            this.onEditBackgroundImgClick
+                                            projectConf,
+                                            this.onEditCoverImgClick
                                         )}
                                     </Card>
                                 </div>
                             );
                         })}
-					</Form>
-				</Scrollbar>
+                    </Form>
+                </Scrollbar>
                 <ReactMediaLibrary
                     show={rmlDisplay}
                     onHide={() => {
@@ -153,16 +133,13 @@ class MapProperties extends Component {
                     fileSelectCallback={this.selectCallback}
                     fileDeleteCallback={this.deleteCallback}
                 />
-                </>
-			);
-		}
-		return null;
+            </>
 	}
 }
 
 export default Form.create({
 	onValuesChange: (props, changedValues, allValues) => {
-        const { onChange, selectedItem } = props;
-        onChange(selectedItem, changedValues, { workarea: allValues });
+		const { onChange, selectedItem } = props;
+		onChange(selectedItem, changedValues, { project: allValues });
 	},
-})(MapProperties);
+})(ProjectProperties);

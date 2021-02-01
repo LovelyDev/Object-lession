@@ -107,7 +107,9 @@ export interface HandlerCallback {
 	 * When canvas has been loaded
 	 *
 	 */
-	onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    
+    onMouseDown? :(target: any) => void;
 }
 
 export interface HandlerOption {
@@ -249,7 +251,8 @@ class Handler implements HandlerOptions {
 	public onRemove?: (target: FabricObject) => void;
 	public onTransaction?: (transaction: TransactionEvent) => void;
 	public onInteraction?: (interactionMode: InteractionMode) => void;
-	public onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    public onLoad?: (handler: Handler, canvas?: fabric.Canvas) => void;
+    public onMouseDown?: (target: any) => void;
 
 	public imageHandler: ImageHandler;
 	public chartHandler: ChartHandler;
@@ -346,7 +349,8 @@ class Handler implements HandlerOptions {
 		this.onRemove = options.onRemove;
 		this.onTransaction = options.onTransaction;
 		this.onInteraction = options.onInteraction;
-		this.onLoad = options.onLoad;
+        this.onLoad = options.onLoad;
+        this.onMouseDown = options.onMouseDown;
 	};
 
 	/**
@@ -408,35 +412,40 @@ class Handler implements HandlerOptions {
 	 * @returns
 	 */
 	public set = (key: keyof FabricObject, value: any) => {
-		const activeObject = this.canvas.getActiveObject() as any;
-		if (!activeObject) {
-			return;
-		}
-		activeObject.set(key, value);
-		activeObject.setCoords();
-		this.canvas.requestRenderAll();
-		const { id, superType, type, player, width, height } = activeObject as any;
-		if (superType === 'element') {
-			if (key === 'visible') {
-				if (value) {
-					activeObject.element.style.display = 'block';
-				} else {
-					activeObject.element.style.display = 'none';
-				}
-			}
-			const el = this.elementHandler.findById(id);
-			// update the element
-			this.elementHandler.setScaleOrAngle(el, activeObject);
-			this.elementHandler.setSize(el, activeObject);
-			this.elementHandler.setPosition(el, activeObject);
-			if (type === 'video' && player) {
-				player.setPlayerSize(width, height);
-			}
-		}
-		const { onModified } = this;
-		if (onModified) {
-			onModified(activeObject);
-		}
+		// const activeObject = this.canvas.getActiveObject() as any;
+        const activeObjects = this.canvas.getActiveObjects();
+        if (!activeObjects) return;
+        activeObjects.forEach((activeObject: any) => {
+            if (!activeObject) {
+                return;
+            }
+            activeObject.set(key, value);
+            activeObject.setCoords();
+            this.canvas.requestRenderAll();
+            const { id, superType, type, player, width, height } = activeObject as any;
+            if (superType === 'element') {
+                if (key === 'visible') {
+                    if (value) {
+                        activeObject.element.style.display = 'block';
+                    } else {
+                        activeObject.element.style.display = 'none';
+                    }
+                }
+                const el = this.elementHandler.findById(id);
+                // update the element
+                this.elementHandler.setScaleOrAngle(el, activeObject);
+                this.elementHandler.setSize(el, activeObject);
+                this.elementHandler.setPosition(el, activeObject);
+                if (type === 'video' && player) {
+                    player.setPlayerSize(width, height);
+                }
+            }
+            const { onModified } = this;
+            if (onModified) {
+                onModified(activeObject);
+            }
+        })
+		
 	};
 
 	/**

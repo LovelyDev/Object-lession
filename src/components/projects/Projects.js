@@ -1,14 +1,30 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { Input } from 'antd';
 import i18n from 'i18next';
 import { CommonButton } from '../common';
 import Scrollbar from '../common/Scrollbar';
 import Container from '../common/Container';
+import axios from '../../config/axios';
+const { getData } = axios;
 import './Projects.css';
 
 class Project extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            coverImage: './images/sample/transparentBg.png'
+        }
+    }
+    componentDidMount() {
+        const { id } = this.props;
+        getData(`/projects/${id}`)
+        .then(res => {
+            const { coverImage } = res.data.project_json;
+            console.log("coverImage is fetched", coverImage);
+            if (!coverImage) return;
+            this.setState({ coverImage });
+        });
     }
     onDeleteProjectClick = async () => {
         const { id } = this.props;
@@ -31,8 +47,11 @@ class Project extends Component {
     render() {
         const { name, onProjectClick } = this.props;
         const { id } = this.props;
+        let { history } = this.props;
+        const { coverImage } = this.state;
         return (
             <div className="project-item">
+                <img src={coverImage} className="project-item-cover-image" />
                 <div className="project-item-header">
                     <CommonButton
                         className="rde-action-btn"
@@ -40,7 +59,10 @@ class Project extends Component {
                         icon="arrow-right"
                         tooltipTitle={i18n.t('Display')}
                         style={{fontSize: 35, height: "auto", margin: "0 10px 0 0"}}
-                        onClick={onProjectClick(id)}
+                        onClick={() => {
+                            onProjectClick(id);
+                            history.push(`/projects/${id}`);
+                        }}
                     />
                 </div>
                 <div className="project-item-content">
@@ -80,7 +102,9 @@ class Projects extends Component {
         this.setState({ loading: status });
     }
     render() {
-        const { projects, onProjectClick, onAddProjectClick, onDeleteProjectClick, onDuplicateProjectClick } = this.props;
+        const { onProjectClick, onAddProjectClick, onDeleteProjectClick, onDuplicateProjectClick } = this.props;
+        const { projects } = this.props;
+        let { history } = this.props;
         const { loading } = this.state;
         const title = (
             <div className="project-list-header">
@@ -111,6 +135,7 @@ class Projects extends Component {
                                     onDeleteProjectClick={onDeleteProjectClick}
                                     onDuplicateProjectClick={onDuplicateProjectClick}
                                     showLoading={this.showLoading}
+                                    history={history}
                                 />)
                             }
                         </div>
@@ -122,4 +147,4 @@ class Projects extends Component {
     }
 }
 
-export default Projects;
+export default withRouter(Projects);

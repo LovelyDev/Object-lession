@@ -55,7 +55,11 @@ class AnimationModal extends Component {
         let newAnimationSteps = this.state.animationSteps;
         newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], object: value});
         this.setState({ animationSteps: [...newAnimationSteps] });
-        console.log("newAnimationSteps", newAnimationSteps);
+    }
+    onDObjectChange = (index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], d_object: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
     }
     onTypeChange = (index, value) => {
         let newAnimationSteps = this.state.animationSteps;
@@ -65,6 +69,15 @@ class AnimationModal extends Component {
     onDurationChange = (index, value) => {
         let newAnimationSteps = this.state.animationSteps;
         newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], duration: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
+    }
+    onDPositionChange = (axis, index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        if (axis === 'x') {
+            newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], d_xposition: value});
+        } else if (axis === 'y') {
+            newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], d_yposition: value});
+        }
         this.setState({ animationSteps: [...newAnimationSteps] });
     }
 	render() {
@@ -100,8 +113,10 @@ class AnimationModal extends Component {
                                 onClear={this.onStepClear}
                                 onDelete={this.onStepDelete}
                                 onObjectChange={this.onObjectChange}
+                                onDObjectChange={this.onDObjectChange}
                                 onTypeChange={this.onTypeChange}
                                 onDurationChange={this.onDurationChange}
+                                onDPositionChange={this.onDPositionChange}
                                 objects={objects}
                             />
                         </Scrollbar>

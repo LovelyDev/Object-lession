@@ -46,7 +46,8 @@ export const workareaOption: Partial<WorkareaObject> = {
 	lockMovementX: true,
 	lockMovementY: true,
 	hoverCursor: 'default',
-	name: '',
+    name: '',
+    'card-type': null,
 	id: 'workarea',
 	type: 'image',
 	layout: 'fixed', // fixed, responsive, fullscreen
@@ -54,7 +55,11 @@ export const workareaOption: Partial<WorkareaObject> = {
 	tooltip: {
 		enabled: false,
 	},
-	isElement: false,
+    isElement: false,
+    'correct-answer': null,
+    'drag-destination': null,
+    'correct-animation': null,
+    'wrong-animation': null,
 };
 
 export const objectOption: Partial<FabricObjectOption> = {
@@ -71,4 +76,20 @@ export const activeSelectionOption = {
 	hasControls: true,
 };
 
-export const propertiesToInclude = ['id', 'name', 'locked', 'editable', 'object_name', 'dragabble', 'clone_on_drag', 'return_on_drag'];
+export const propertiesToInclude = [
+    'id', 
+    'name', 
+    'locked', 
+    'editable', 
+    'object_name', 
+    'dragabble', 
+    'clone_on_drag', 
+    'return_on_drag', 
+    'card-type',
+    'correct-answer',
+    'drag-destination',
+    'correct-animation',
+    'wrong-animation',
+    'posX',
+    'posY',
+];

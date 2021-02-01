@@ -3,7 +3,7 @@ import { Badge, Button, Popconfirm, Menu, Input } from 'antd';
 import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
-import axios from 'axios';
+import { toast } from 'react-toastify';
 
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
@@ -19,7 +19,8 @@ import Container from '../common/Container';
 import CommonButton from '../common/CommonButton';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
-import env from '../../config/env';
+import axios from '../../config/axios';
+const { getData, postData, putData, deleteData } = axios;
 
 const propertiesToInclude = [
 	'id',
@@ -97,12 +98,17 @@ class ImageMapEditor extends Component {
             objects: undefined,
             canvasRefs: [{id: 0, canvasRef: null}],
             curCanvasRefId: 0,
-            projectName: ""
+            projectName: "",
+            confActiveTab: "project",
+            width: 600,
+            height: 400,
+            coverImage: './images/sample/transparentBg.png',
         };
     }
 	
 
 	componentDidMount() {
+        console.log("imagemap mounted");
 		this.showLoading(true);
 		import('./Descriptors.json').then(descriptors => {
 			this.setState(
@@ -122,16 +128,32 @@ class ImageMapEditor extends Component {
         if (projectId) {
             this.showLoading(true);
             this.forceUpdate();
-            axios.get(`${env.API_URL}${projectId}`)
+            getData(`/projects/${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
-                const { objectsList, animations, styles, dataSources } = project_json;
+                let objectsList = null, animations = [], styles = [], dataSources = [],
+                width = 400,
+                height = 600,
+                coverImage = './images/sample/transparentBg.png';
+                if (project_json) {
+                    objectsList = project_json.objectsList;
+                    animations = project_json.animations;
+                    styles = project_json.styles;
+                    dataSources = project_json.dataSources;
+                    width = project_json.width || 600;
+                    height = project_json.height || 400;
+                    coverImage = project_json.coverImage || './images/sample/transparentBg.png';
+                }
                 this.setState({
                     animations,
                     styles,
                     dataSources,
-                    projectName: name
+                    projectName: name,
+                    width,
+                    height,
+                    coverImage
                 });
+                this.changeEditing(false);
                 if (objectsList) {
                     const newCanvasRefs = objectsList.map((page, i) => {
                         const data = page.objects.filter(obj => {
@@ -169,7 +191,7 @@ class ImageMapEditor extends Component {
             this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.select(target);
 		},
 		onSelect: target => {
-			const { selectedItem } = this.state;
+            const { selectedItem } = this.state;
 			if (target && target.id && target.id !== 'workarea' && target.type !== 'activeSelection') {
 				if (selectedItem && target.id === selectedItem.id) {
 					return;
@@ -222,7 +244,11 @@ class ImageMapEditor extends Component {
 				this.changeEditing(true);
 			}
 			const changedKey = Object.keys(changedValues)[0];
-			const changedValue = changedValues[changedKey];
+            const changedValue = changedValues[changedKey];
+            if (allValues.project) {
+				this.canvasHandlers.onProjectWokarea(changedKey, changedValue, allValues.project);
+				return;
+			}
 			if (allValues.workarea) {
 				this.canvasHandlers.onChangeWokarea(changedKey, changedValue, allValues.workarea);
 				return;
@@ -384,10 +410,11 @@ class ImageMapEditor extends Component {
 					console.error(error);
 				}
 				return;
-			}
+            }
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue);
 		},
 		onChangeWokarea: (changedKey, changedValue, allValues) => {
+            console.log("onChangeWokarea", changedKey, changedValue, allValues);
 			if (changedKey === 'layout') {
 				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setLayout(changedValue);
 				return;
@@ -397,16 +424,39 @@ class ImageMapEditor extends Component {
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
-				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.originScaleToResize(
-					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea,
-					allValues.width,
-					allValues.height,
-				);
-				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.centerObject(this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea);
+                const { canvasRefs } = this.state;
+                canvasRefs.forEach(canvasRef => {
+                    canvasRef.canvasRef.handler.originScaleToResize(
+                        canvasRef.canvasRef.handler.workarea,
+                        allValues.width,
+                        allValues.height,
+                    );
+                    canvasRef.canvasRef.canvas.centerObject(canvasRef.canvasRef.handler.workarea);
+                })
 				return;
-			}
+            }
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workarea.set(changedKey, changedValue);
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.canvas.requestRenderAll();
+        },
+        onProjectWokarea: (changedKey, changedValue, allValues) => {
+			if (changedKey === 'width' || changedKey === 'height') {
+                const { canvasRefs } = this.state;
+                canvasRefs.forEach(canvasRef => {
+                    canvasRef.canvasRef.handler.originScaleToResize(
+                        canvasRef.canvasRef.handler.workarea,
+                        allValues.width,
+                        allValues.height,
+                    );
+                    canvasRef.canvasRef.canvas.centerObject(canvasRef.canvasRef.handler.workarea);
+                })
+                this.setState({ width: allValues.width, height: allValues.height });
+				return;
+            }
+            console.log("onProjectWokarea", changedKey);
+            if (changedKey === 'cover-image') {
+                console.log("onProjectWokarea cover-image", changedValue);
+                this.setState({ coverImage: changedValue });
+            }
 		},
 		onTooltip: (ref, target) => {
 			const value = Math.random() * 10 + 1;
@@ -528,7 +578,12 @@ class ImageMapEditor extends Component {
 		},
 		onTransaction: transaction => {
 			this.forceUpdate();
-		},
+        },
+        onMouseDown: target => {
+            if (target.id === 'workarea') {
+                this.setState({ confActiveTab: 'map' });
+            }
+        }
 	};
 
 	handlers = {
@@ -564,12 +619,14 @@ class ImageMapEditor extends Component {
 						}
 					};
 					reader.onload = e => {
-                        const { objectsList, animations, styles, dataSources } = JSON.parse(e.target.result);
-                        console.log("uploaded animations", animations);
+                        const { objectsList, animations, styles, dataSources, width, height, coverImage } = JSON.parse(e.target.result);
 						this.setState({
 							animations,
 							styles,
-							dataSources
+                            dataSources,
+                            width: width || 600,
+                            height: height || 400,
+                            coverImage: coverImage || './images/sample/transparentBg.png'
 						});
 						if (objectsList) {
 							const newCanvasRefs = objectsList.map((page, i) => {
@@ -621,14 +678,16 @@ class ImageMapEditor extends Component {
 				});
 				return {id: canvasRef.id, objects};
 			})
-			const { animations, styles, dataSources } = this.state;
+			const { animations, styles, dataSources, width, height, coverImage } = this.state;
 			const exportDatas = {
 				objectsList,
 				animations,
 				styles,
-				dataSources,
+                dataSources,
+                width,
+                height,
+                coverImage
             };
-            console.log("downloaded animations", animations);
 			const anchorEl = document.createElement('a');
 			anchorEl.href = `data:text/json;charset=utf-8,${encodeURIComponent(
 				JSON.stringify(exportDatas, null, '\t'),
@@ -640,7 +699,6 @@ class ImageMapEditor extends Component {
 			this.showLoading(false);
 		},
 		onChangeAnimations: animations => {
-            console.log("animations", animations);
 			if (!this.state.editing) {
 				this.changeEditing(true);
 			}
@@ -679,29 +737,42 @@ class ImageMapEditor extends Component {
 				});
 				return {id: canvasRef.id, objects};
 			})
-			const { animations, styles, dataSources, curCanvasRefId } = this.state;
+            const { animations, 
+                styles, 
+                dataSources, 
+                curCanvasRefId, 
+                width,
+                height,
+                coverImage
+            } = this.state;
 			const exportDatas = {
 				objectsList,
 				animations,
 				styles,
-				dataSources,
+                dataSources,
+                width,
+                height,
+                coverImage
             };
             const { projectId } = this.props;
             if (!projectId) {
                 this.showLoading(false);
                 return;
             }
-            axios.put(`${env.API_URL}${projectId}`, {
+            putData(`/projects/${projectId}`, {
                 name: this.state.projectName,
                 project_json: exportDatas
             })
-            .then(res => {
+            .then(() => {
                 const { onProjectNameChange } = this.props;
                 onProjectNameChange(this.state.projectName);
                 this.showLoading(false);
-                alert("Save project successfully");
+                toast.success("Save project successfully");
             })
             
+        },
+        onChangeConfTab: (activeKey) => {
+            this.setState({ confActiveTab: activeKey });
         }
 	};
 
@@ -728,7 +799,8 @@ class ImageMapEditor extends Component {
 	changeEditing = editing => {
 		this.setState({
 			editing,
-		});
+        });
+        this.props.onChangeEditing(editing);
 	};
     
     onPanelStateChange = (type, value) => {
@@ -818,7 +890,11 @@ class ImageMapEditor extends Component {
 			editing,
 			descriptors,
             objects,
-            curCanvasRefId
+            curCanvasRefId,
+            confActiveTab,
+            width,
+            height,
+            coverImage
         } = this.state;
 		let { canvasRefs } = this.state;
 		const {
@@ -831,7 +907,8 @@ class ImageMapEditor extends Component {
 			onTooltip,
 			onClick,
 			onContext,
-			onTransaction,
+            onTransaction,
+            onMouseDown,
 		} = this.canvasHandlers;
 		const {
 			onChangePreview,
@@ -841,8 +918,14 @@ class ImageMapEditor extends Component {
 			onChangeStyles,
 			onChangeDataSources,
             onSaveImage,
-            onSaveProject
+            onSaveProject,
+            onChangeConfTab
         } = this.handlers;
+        const projectConf = {
+            width,
+            height,
+            coverImage,
+        }
 		const action = (
 			<React.Fragment>
                 <CommonButton
@@ -960,7 +1043,8 @@ class ImageMapEditor extends Component {
 							onTooltip={onTooltip}
 							onClick={onClick}
 							onContext={onContext}
-							onTransaction={onTransaction}
+                            onTransaction={onTransaction}
+                            onMouseDown={onMouseDown}
 							keyEvent={{
 								transaction: true,
 							}}
@@ -986,7 +1070,10 @@ class ImageMapEditor extends Component {
 					onChangeDataSources={onChangeDataSources}
 					animations={animations}
 					styles={styles}
-					dataSources={dataSources}
+                    dataSources={dataSources}
+                    confActiveTab={confActiveTab}
+                    onChangeTab={onChangeConfTab}
+                    projectConf={projectConf}
 				/>
 				<ImageMapPreview
 					preview={preview}

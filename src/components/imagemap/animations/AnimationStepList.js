@@ -16,12 +16,25 @@ class AnimationStepList extends Component {
         for (let i = 0; i < objects.length; i++) {
             const e = objects[i];
             if (e.object_name === value) {
-                console.log("selected object", e);
                 obj = e;
                 break;
             }
         }
         onObjectChange(index, obj);
+    }
+
+    onDObjectChange = (index) => (value) => {
+        const { onDObjectChange } = this.props;
+        const { objects } = this.props;
+        let obj = null;
+        for (let i = 0; i < objects.length; i++) {
+            const e = objects[i];
+            if (e.object_name === value) {
+                obj = e;
+                break;
+            }
+        }
+        onDObjectChange(index, obj);
     }
     
     onTypeChange = (index) => (value) => {
@@ -32,6 +45,10 @@ class AnimationStepList extends Component {
     onDurationChange = (index, value) => {
         const { onDurationChange } = this.props;
         onDurationChange(index, value);
+    }
+    onDPositionChange = (axis, index, value) => {
+        const { onDPositionChange } = this.props;
+        onDPositionChange(axis, index, value);
     }
     onBlur = () => {
     }
@@ -57,7 +74,6 @@ class AnimationStepList extends Component {
                     <List
                         dataSource={animationSteps}
                         renderItem={(animationStep, index) => {
-                            console.log("animationStep", animationStep);
                             const actions = [
                                 <Button
                                     className="rde-action-btn"
@@ -116,9 +132,55 @@ class AnimationStepList extends Component {
                                                 <Option value="hide">HIDE</Option>
                                                 <Option value="show">SHOW</Option>
                                                 <Option value="move">MOVE</Option>
+                                                <Option value="move-to">MOVE TO</Option>
                                             </Select>
                                         </Col>
                                     </Row>
+                                    {animationStep.type === 'move' && <Row>
+                                        <Col span={8}>
+                                            <span>Destination Position (x, y):</span>
+                                        </Col>
+                                        <Col span={4}>
+                                            <Input placeholder="x" style={{width: 50}} value={animationStep.d_xposition} onChange={(e) => {
+                                                const patt1 = /\D/g;
+                                                const result = e.target.value.match(patt1);
+                                                if (!result || result.length === 0) {
+                                                    this.onDPositionChange('x', index, e.target.value);
+                                                }
+                                            }} />
+                                        </Col>
+                                        <Col span={12}>
+                                            <Input placeholder="y" style={{width: 50}} value={animationStep.d_yposition} onChange={(e) => {
+                                                const patt1 = /\D/g;
+                                                const result = e.target.value.match(patt1);
+                                                if (!result || result.length === 0) {
+                                                    this.onDPositionChange('y', index, e.target.value);
+                                                }
+                                            }} />
+                                        </Col>
+                                    </Row>
+                                    }
+                                    {animationStep.type === 'move-to' && <Row>
+                                        <Col span={8}>
+                                            <span>Destination Object:</span>
+                                        </Col>
+                                        <Col span={16}>
+                                            <Select
+                                                showSearch
+                                                style={{ width: 200 }}
+                                                placeholder="Select Object"
+                                                optionFilterProp="children"
+                                                onChange={this.onDObjectChange(index)}
+                                                value={animationStep.d_object ? animationStep.d_object.object_name : null}
+                                                filterOption={(input, option) => 
+                                                    option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                                }
+                                            >
+                                                {objects ? objects.map(obj => <Option value={obj.object_name}>{obj.object_name}</Option>) : null}
+                                            </Select>
+                                        </Col>
+                                    </Row>
+                                    }
                                     <Row>
                                         <Col span={8}>
                                             <span>Duration:</span>

@@ -15,15 +15,22 @@ import UserProperty from './UserProperty';
 import TriggerProperty from './TriggerProperty';
 import ImageFilterProperty from './ImageFilterProperty';
 import ChartProperty from './ChartProperty';
+import ProjectProperty from './ProjectProperty';
 
 export default {
+    project: {
+        'project-settings': {
+			title: 'Project Settings',
+			component: ProjectProperty,
+		},
+    },
 	map: {
-		map: {
-			title: 'Map',
+		'card-settings': {
+			title: 'Card Settings',
 			component: MapProperty,
 		},
 		image: {
-			title: 'Image',
+			title: 'Background Image',
 			component: ImageProperty,
 		},
 	},

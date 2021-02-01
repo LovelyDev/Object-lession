@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Helmet } from 'react-helmet';
-import axios from 'axios';
-
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ImageMapEditor from '../components/imagemap/ImageMapEditor';
 import WorkflowEditor from '../components/workflow/WorkflowEditor';
 import Title from './Title';
@@ -9,7 +10,12 @@ import FlowEditor from '../components/flow/FlowEditor';
 import FlowContainer from './FlowContainer';
 import HexGrid from '../components/hexgrid/HexGrid';
 import Projects from '../components/projects/Projects';
-import env from '../config/env';
+import Login from '../components/auth/Login';
+import ProjectForId from '../components/projects/ProjectForId';
+import { API_URL } from '../config/env';
+import axios from '../config/axios';
+import { getTokenFromLocal } from '../helpers/utils';
+const { getData, postData, putData, deleteData } = axios;
 
 type EditorType = 'imagemap' | 'workflow' | 'flow' | 'hexgrid' | 'projects';
 
@@ -18,6 +24,8 @@ interface IState {
     projectId: any;
     projects: any;
     projectName: any;
+    token: any;
+    projectEditing: any;
 }
 
 class App extends Component<any, IState> {
@@ -25,19 +33,26 @@ class App extends Component<any, IState> {
         activeEditor: 'projects',
         projectId: null,
         projects: [],
-        projectName: null
+        projectName: null,
+        token: null,
+        projectEditing: false
 	};
     componentDidMount() {
-        axios.get("https://api.mathcurious.com/projects")
+        const token = getTokenFromLocal();
+        console.log("token for call", token);
+        if (!token) return;
+        getData('/projects')
         .then(res => {
-            this.setState({projects: res.data});
+            this.setState({projects: res.data, token});
         })
     }
 	onChangeMenu = ({ key }) => {
         if (key === 'projects') {
-            axios.get("https://api.mathcurious.com/projects")
+            const { token } = this.state;
+            getData('/projects')
             .then(res => {
                 this.setState({projects: res.data});
+                console.log("project list is refetched", res.data);
             })
         }
 		this.setState({
@@ -63,8 +78,7 @@ class App extends Component<any, IState> {
     }
 
     onAddProjectClick = (projectName) => () => {
-        axios.post("https://api.mathcurious.com/projects",
-        {
+        postData('/projects', {
             name: projectName
         })
         .then(res => {
@@ -78,7 +92,7 @@ class App extends Component<any, IState> {
     }
 
     onDeleteProjectClick = async (id) => {
-        await axios.delete(`${env.API_URL}${id}`);
+        await deleteData(`/projects/${id}`)
         const { projects } = this.state;
         const newProjects = projects.filter(project => project.id !== id)
         this.setState({projects: [...newProjects]});
@@ -86,9 +100,9 @@ class App extends Component<any, IState> {
     }
 
     onDuplicateProjectClick = async (id) => {
-        const res = await axios.get(`${env.API_URL}${id}`);
+        const res = await getData(`/projects/${id}`);
         const { name, project_json } = res.data;
-        const copiedProject = await axios.post(`${env.API_URL}`, {
+        const copiedProject = await postData('/projects', {
             name: `<${name}> Copy`,
             project_json
         });
@@ -97,6 +111,23 @@ class App extends Component<any, IState> {
         return true;
     }
 
+    onGetProjectId = (id) => {
+        const { projects } = this.state;
+        console.log("onGetProjectId_projects", projects);
+        let projectName = null;
+        for (let i = 0; i < projects.length; i++) {
+            const e = projects[i];
+            if (e.id === id) {
+                projectName = e.name;
+                break;
+            }
+        }
+        console.log("onGetProjectId", projectName);
+        this.setState({ projectId: id, activeEditor: 'imagemap', projectName });
+    }
+    onChangeEditing = (editing) => {
+        this.setState({ projectEditing: editing })
+    }
 	renderEditor = (activeEditor: EditorType) => {
         const { projects, projectId } = this.state;
         let imageMapProps = {};
@@ -107,6 +138,7 @@ class App extends Component<any, IState> {
 			case 'imagemap':
                 return <ImageMapEditor
                         onProjectNameChange={this.onProjectNameChange}
+                        onChangeEditing={this.onChangeEditing}
                         {...imageMapProps} />;
 			case 'workflow':
 				return <WorkflowEditor />;
@@ -121,12 +153,12 @@ class App extends Component<any, IState> {
                     onAddProjectClick={this.onAddProjectClick}
                     onDeleteProjectClick={this.onDeleteProjectClick}
                     onDuplicateProjectClick={this.onDuplicateProjectClick}
-                    />;
+                />;
 		}
 	};
 
 	render() {
-		const { activeEditor, projectName } = this.state;
+        const { activeEditor, projectName, projectEditing } = this.state;
 		return (
 			<div className="rde-main">
 				<Helmet>
@@ -151,14 +183,39 @@ class App extends Component<any, IState> {
 					</script>
 					<script async={true} src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" />
 				</Helmet>
-				<div className="rde-title">
-					<Title onChangeMenu={this.onChangeMenu} current={activeEditor} projectName={projectName} />
-				</div>
-				<FlowContainer>
-					<div className="rde-content">{this.renderEditor(activeEditor)}</div>
-				</FlowContainer>
+                <Router>
+                    <div className="rde-title">
+                        <Title
+                            onChangeMenu={this.onChangeMenu}
+                            current={activeEditor}
+                            projectName={projectName}
+                            editing={projectEditing}
+                        />
+                    </div>
+                    <FlowContainer>
+                        {/* <div className="rde-content">{this.renderEditor(activeEditor)}</div> */}
+                        <div className="rde-content">
+                            <Switch>
+                                <Route exact path="/login/:token" component={Login} />
+                                <Route exact path="/projects/:id" component={() => <ProjectForId onGetProjectId={this.onGetProjectId} />} />
+                            </Switch>
+                            {this.renderEditor(activeEditor)}
+                        </div>
+                    </FlowContainer>
+                    <ToastContainer
+                        position="bottom-center"
+                        autoClose={5000}
+                        hideProgressBar={false}
+                        newestOnTop={false}
+                        closeOnClick
+                        rtl={false}
+                        pauseOnFocusLoss
+                        draggable
+                        pauseOnHover
+                    />
+                </Router>
 			</div>
-		);
+        );
 	}
 }
 

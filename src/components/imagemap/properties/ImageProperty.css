@@ -1,0 +1,18 @@
+.background-image {
+    width: 80%;
+}
+
+.background-image img {
+    width: 100%;
+    height: auto;
+}
+
+.background-image-panel {
+    margin-top: 30px;
+}
+
+.background-image-panel-body {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
