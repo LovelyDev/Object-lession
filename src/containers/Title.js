@@ -151,9 +151,7 @@ class Title extends Component {
                                 {i18n.t('Projects')}
                             </Popconfirm>
                         </Menu.Item>
-                        <Menu.Item key="login" style={{ color: '#fff' }} onClick={this.onLogin}>
-							{i18n.t('Login')}
-						</Menu.Item>
+                        
 						{/* <Menu.Item key="flow" style={{ color: '#fff' }}>{i18n.t('flow.flow')}</Menu.Item> */}
 						{/* <Menu.Item key="hexgrid" style={{ color: '#fff' }}>
 							{i18n.t('hexgrid.hexgrid')}
