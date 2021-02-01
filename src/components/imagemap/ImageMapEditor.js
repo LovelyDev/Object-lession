@@ -153,6 +153,7 @@ class ImageMapEditor extends Component {
                     height,
                     coverImage
                 });
+                this.changeEditing(false);
                 if (objectsList) {
                     const newCanvasRefs = objectsList.map((page, i) => {
                         const data = page.objects.filter(obj => {
