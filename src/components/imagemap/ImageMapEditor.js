@@ -798,7 +798,8 @@ class ImageMapEditor extends Component {
 	changeEditing = editing => {
 		this.setState({
 			editing,
-		});
+        });
+        this.props.onChangeEditing(editing);
 	};
     
     onPanelStateChange = (type, value) => {

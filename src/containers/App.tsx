@@ -25,6 +25,7 @@ interface IState {
     projects: any;
     projectName: any;
     token: any;
+    projectEditing: any;
 }
 
 class App extends Component<any, IState> {
@@ -33,7 +34,8 @@ class App extends Component<any, IState> {
         projectId: null,
         projects: [],
         projectName: null,
-        token: null
+        token: null,
+        projectEditing: false
 	};
     componentDidMount() {
         const token = getTokenFromLocal();
@@ -123,7 +125,9 @@ class App extends Component<any, IState> {
         console.log("onGetProjectId", projectName);
         this.setState({ projectId: id, activeEditor: 'imagemap', projectName });
     }
-
+    onChangeEditing = (editing) => {
+        this.setState({ projectEditing: editing })
+    }
 	renderEditor = (activeEditor: EditorType) => {
         const { projects, projectId } = this.state;
         let imageMapProps = {};
@@ -134,6 +138,7 @@ class App extends Component<any, IState> {
 			case 'imagemap':
                 return <ImageMapEditor
                         onProjectNameChange={this.onProjectNameChange}
+                        onChangeEditing={this.onChangeEditing}
                         {...imageMapProps} />;
 			case 'workflow':
 				return <WorkflowEditor />;
@@ -153,7 +158,7 @@ class App extends Component<any, IState> {
 	};
 
 	render() {
-        const { activeEditor, projectName } = this.state;
+        const { activeEditor, projectName, projectEditing } = this.state;
 		return (
 			<div className="rde-main">
 				<Helmet>
@@ -180,7 +185,12 @@ class App extends Component<any, IState> {
 				</Helmet>
                 <Router>
                     <div className="rde-title">
-                        <Title onChangeMenu={this.onChangeMenu} current={activeEditor} projectName={projectName} />
+                        <Title
+                            onChangeMenu={this.onChangeMenu}
+                            current={activeEditor}
+                            projectName={projectName}
+                            editing={projectEditing}
+                        />
                     </div>
                     <FlowContainer>
                         {/* <div className="rde-content">{this.renderEditor(activeEditor)}</div> */}
@@ -188,9 +198,8 @@ class App extends Component<any, IState> {
                             <Switch>
                                 <Route exact path="/login/:token" component={Login} />
                                 <Route exact path="/projects/:id" component={() => <ProjectForId onGetProjectId={this.onGetProjectId} />} />
-                                <Route path="/" component={() => this.renderEditor(activeEditor)} />
                             </Switch>
-                            
+                            {this.renderEditor(activeEditor)}
                         </div>
                     </FlowContainer>
                     <ToastContainer
