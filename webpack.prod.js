@@ -37,7 +37,7 @@ module.exports = merge(baseConfig, {
 		path: path.resolve(__dirname, 'docs'),
 		filename: 'js/[name].[chunkhash:16].js',
 		chunkFilename: 'js/[id].[chunkhash:16].js',
-		publicPath: './',
+		publicPath: '/',
 	},
 	optimization: {
 		minimizer: [
