@@ -148,6 +148,7 @@ class MapProperties extends Component {
                         this.setState({rmlDisplay: false});
                         this.forceUpdate();
                     }}
+                    libraryCardComponent={FileCard}
                     fileUploadCallback={this.uploadCallback}
                     fileLibraryList={fileLibraryList}
                     fileSelectCallback={this.selectCallback}

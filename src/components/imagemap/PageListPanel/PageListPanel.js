@@ -17,8 +17,7 @@ class Page extends Component {
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
             >
-                {/* <img className="panel-list-item-page-preview" src={img} /> */}
-                {id}
+                { <img className="panel-list-item-page-preview" src={img} /> }               
             </div>
             <div className="panel-list-item-btn-group">
                 {(pageCount !== 1) &&

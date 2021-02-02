@@ -16,6 +16,7 @@ import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-libr
 import { s3 } from './config/aws';
 import { API_URL } from '../../config/env';
 import axiosInstance from '../../config/axios';
+import FileCard from './FileCard';
 const { getData, postData, putData, deleteData } = axiosInstance;
 
 notification.config({
@@ -510,7 +511,8 @@ class ImageMapItems extends Component {
                     onHide={() => {
                         this.setState({rmlDisplay: false});
                         this.forceUpdate();
-                    }}
+					}}
+					libraryCardComponent={FileCard}
                     fileUploadCallback={this.uploadCallback}
                     fileLibraryList={fileLibraryList}
                     fileSelectCallback={this.selectCallback}
