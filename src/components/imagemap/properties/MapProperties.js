@@ -8,6 +8,7 @@ import Scrollbar from '../../common/Scrollbar';
 import { API_URL } from '../../../config/env';
 import axiosInstance from '../../../config/axios';
 const { getData, postData, putData, deleteData } = axiosInstance;
+import FileCard from '../FileCard';
 
 class MapProperties extends Component {
     static propTypes = {

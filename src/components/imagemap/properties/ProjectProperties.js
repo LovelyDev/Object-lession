@@ -9,6 +9,7 @@ import { API_URL } from '../../../config/env';
 import axiosInstance from '../../../config/axios';
 
 const { getData, postData, putData, deleteData } = axiosInstance;
+import FileCard from '../FileCard';
 
 class ProjectProperties extends Component {
     constructor(props) {

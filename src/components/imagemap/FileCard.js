@@ -1,23 +1,18 @@
 import React from "react";
-import {FileLibraryListItem} from "../../types";
 import Card from "react-bootstrap/Card";
 import ListGroup from "react-bootstrap/ListGroup";
 import ListGroupItem from "react-bootstrap/ListGroupItem";
-import formatBytes from "../utils/formatBytes";
-import formatDate from "../utils/formatDate";
 
-const imgStyle: React.CSSProperties = {
+const imgStyle = {
 	width: "100%",
 	height: "150px",
 	objectFit: "contain",
 	objectPosition: "50% 50%",
 };
 
-interface IProps extends FileLibraryListItem {
-	selectedItem: FileLibraryListItem | undefined;
-}
 
-const FileCard: React.FC<IProps> = (props: IProps): JSX.Element => {
+
+const FileCard =(props) => {
 
 	return (
 		<Card
