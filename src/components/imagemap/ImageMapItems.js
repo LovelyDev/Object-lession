@@ -152,7 +152,10 @@ class ImageMapItems extends Component {
 		},
 		onDrawingItem: item => {
 			const { canvasRef } = this.props;
-			if (canvasRef.handler.interactionMode === 'polygon' || canvasRef.handler.interactionMode === 'photspot') {
+            if (canvasRef.handler.interactionMode === 'polygon' ||
+            canvasRef.handler.interactionMode === 'photspot' ||
+            canvasRef.handler.interactionMode === 'path' ||
+            canvasRef.handler.interactionMode === 'bezier') {
 				message.info('Already drawing');
 				return;
 			}
@@ -162,6 +165,10 @@ class ImageMapItems extends Component {
 				canvasRef.handler.drawingHandler.arrow.init();
             } else if (item.option.type === 'photspot') {
                 canvasRef.handler.drawingHandler.photspot.init();
+            } else if (item.option.type === 'path') {
+                canvasRef.handler.drawingHandler.path.init();
+            } else if (item.option.type === 'bezier') {
+                canvasRef.handler.drawingHandler.bezier.init();
             } else {
 				canvasRef.handler.drawingHandler.polygon.init();
 			}

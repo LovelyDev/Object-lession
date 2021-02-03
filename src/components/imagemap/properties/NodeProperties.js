@@ -75,7 +75,7 @@ class NodeProperties extends Component {
         const showArrow = false;
         const  { getFieldDecorator } = form;
         let data, workarea;
-        if (selectedItem) {
+        if (selectedItem && canvasRef) {
             data = selectedItem;
             workarea = canvasRef.handler.workarea;
             if (Array.isArray(selectedItem)) {
@@ -92,7 +92,7 @@ class NodeProperties extends Component {
 		return (
 			<Scrollbar>
 				<Form layout="horizontal" colon={false}>
-                {selectedItem ? (<div className="object-attribute">
+                {data && workarea ? (<div className="object-attribute">
                     <Row className="object-attribute-row">
                         <Col span={12}>
                             <span>Name:</span>

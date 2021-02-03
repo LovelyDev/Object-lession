@@ -77,6 +77,35 @@ const CanvasObject: CanvasObjectSchema = {
 				perPixelTargetFind: true,
 			}),
     },
+    path: {
+		create: ({ points, path, ...option }: { points: any, path: any }) => {
+            if (path) {
+                const newPath = new fabric.Path(path, {
+                    ...option,
+                });
+                return newPath;
+            }
+            let pathStr = "";
+            if (points) {
+                points.map((p: any, i: any) => {
+                    if(i === 0) {
+                        pathStr = `M ${p.x} ${p.y}`;
+                    } else {
+                        pathStr += `L ${p.x} ${p.y}`;
+                    }
+                })
+            }
+            const newPath = new fabric.Path(pathStr, {
+                ...option,
+            });
+            return newPath;
+        }
+    },
+    bezier: {
+		create: ({ path, ...option }: { path: any }) => new fabric.Path(path, {
+            ...option,
+        })
+    },
 	line: {
 		create: ({ points, ...option }: { points: any }) => new Line(points, option),
 	},

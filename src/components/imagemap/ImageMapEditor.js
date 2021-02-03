@@ -637,7 +637,8 @@ class ImageMapEditor extends Component {
 									return true;
 								});
 								return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
-							});
+                            });
+                            console.log("projects upload done");
 							this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
 						}
 						setTimeout(() => {

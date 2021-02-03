@@ -24,7 +24,7 @@ class MapProperties extends Component {
         this.getAllImages();
     }
     shouldComponentUpdate(nextProps, nextState) {
-        if (this.props.canvasRef !== nextProps.canvasRef) {
+        if (this.props.canvasRef !== nextProps.canvasRef && nextProps.canvasRef) {
             const data = nextProps.canvasRef.handler.workarea;
             this.props.form.setFieldsValue({
                 name: data.name,

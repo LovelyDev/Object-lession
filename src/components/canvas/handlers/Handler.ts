@@ -1506,6 +1506,7 @@ class Handler implements HandlerOptions {
 	 * @param {(canvas: FabricCanvas) => void} [callback]
 	 */
 	public importJSON = async (json: any, callback?: (canvas: FabricCanvas) => void) => {
+        console.log("importJson");
 		if (typeof json === 'string') {
 			json = JSON.parse(json);
 		}
@@ -1551,7 +1552,8 @@ class Handler implements HandlerOptions {
 			}
 			if (obj.superType === 'element') {
 				obj.id = v4();
-			}
+            }
+            console.log("objects are added");
 			this.add(obj, false, true);
 			this.canvas.renderAll();
 		});
