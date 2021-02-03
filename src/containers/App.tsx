@@ -84,6 +84,7 @@ class App extends Component<any, IState> {
         .then(res => {
             const { projects } = this.state;
             this.setState({projects: [...projects, res.data]});
+            this.onProjectClick(res.data.id)();
         })
     }
 
