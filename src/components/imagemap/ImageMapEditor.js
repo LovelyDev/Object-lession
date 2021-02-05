@@ -103,6 +103,7 @@ class ImageMapEditor extends Component {
             width: 600,
             height: 400,
             coverImage: './images/sample/transparentBg.png',
+            clipboard: null,
         };
     }
 	
@@ -486,7 +487,8 @@ class ImageMapEditor extends Component {
 		},
 		onContext: (ref, event, target) => {
 			if ((target && target.id === 'workarea') || !target) {
-				const { layerX: left, layerY: top } = event;
+                const { layerX: left, layerY: top } = event;
+                const { clipboard } = this.state;
 				return (
 					<Menu>
 						<Menu.SubMenu key="add" style={{ width: 120 }} title={i18n.t('action.add')}>
@@ -500,6 +502,15 @@ class ImageMapEditor extends Component {
 								);
 							})}
 						</Menu.SubMenu>
+                        <Menu.Item
+                            disabled={clipboard === null}
+							onClick={() => {
+                                this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.paste(clipboard);
+                                this.setState({ clipboard: null });
+							}}
+						>
+							{i18n.t('Paste')}
+						</Menu.Item>
 					</Menu>
 				);
 			}
@@ -526,6 +537,15 @@ class ImageMapEditor extends Component {
 							}}
 						>
 							{i18n.t('action.delete')}
+						</Menu.Item>
+                        <Menu.Item
+							onClick={() => {
+                                const clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
+                                console.log("just copied... clipboard", clipboard);
+                                this.setState({clipboard});
+							}}
+						>
+							{i18n.t('Copy')}
 						</Menu.Item>
 					</Menu>
 				);
@@ -554,11 +574,23 @@ class ImageMapEditor extends Component {
 						>
 							{i18n.t('action.delete')}
 						</Menu.Item>
+                        <Menu.Item
+							onClick={() => {
+                                const clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
+                                console.log("just copied... clipboard", clipboard);
+                                this.setState({clipboard});
+							}}
+						>
+							{i18n.t('Copy')}
+						</Menu.Item>
 					</Menu>
 				);
 			}
 			return (
-				<Menu>
+				<Menu onClick={(e) => {
+                    console.log("domEvent", e.domEvent.target);
+                    e.domEvent.target.parentNode.remove();
+                }}>
 					<Menu.Item
 						onClick={() => {
 							this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.duplicateById(target.id);
@@ -573,6 +605,15 @@ class ImageMapEditor extends Component {
 					>
 						{i18n.t('action.delete')}
 					</Menu.Item>
+                    <Menu.Item
+                        onClick={() => {
+                            const clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
+                            console.log("just copied... clipboard", clipboard);
+                            this.setState({clipboard});
+                        }}
+                    >
+                        {i18n.t('Copy')}
+                    </Menu.Item>
 				</Menu>
 			);
 		},
@@ -996,7 +1037,8 @@ class ImageMapEditor extends Component {
 						this.itemsRef = c;
 					}}
 					canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
-					descriptors={descriptors}
+                    descriptors={descriptors}
+                    projectId={this.props.projectId}
 				/>
                 <PageListPanel
 					onPanelStateChange={this.onPanelStateChange}
@@ -1075,6 +1117,7 @@ class ImageMapEditor extends Component {
                     confActiveTab={confActiveTab}
                     onChangeTab={onChangeConfTab}
                     projectConf={projectConf}
+                    projectId={this.props.projectId}
 				/>
 				<ImageMapPreview
 					preview={preview}

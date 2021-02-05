@@ -1050,14 +1050,14 @@ class Handler implements HandlerOptions {
 	 */
 	public copy = () => {
 		const { propertiesToInclude } = this;
-		const activeObject = this.canvas.getActiveObject() as FabricObject;
+        const activeObject = this.canvas.getActiveObject() as FabricObject;
 		if (activeObject && activeObject.superType === 'link') {
 			return false;
 		}
 		if (activeObject) {
 			if (typeof activeObject.cloneable !== 'undefined' && !activeObject.cloneable) {
 				return false;
-			}
+            }
 			if (activeObject.type === 'activeSelection') {
 				const activeSelection = activeObject as fabric.ActiveSelection;
 				if (activeSelection.getObjects().some((obj: any) => obj.superType === 'node')) {
@@ -1135,7 +1135,7 @@ class Handler implements HandlerOptions {
 				}
 			}, propertiesToInclude);
 		}
-		return true;
+		return this.clipboard;
 	};
 
 	/**
@@ -1143,12 +1143,17 @@ class Handler implements HandlerOptions {
 	 *
 	 * @returns
 	 */
-	public paste = () => {
+	public paste = (clip: any) => {
+        let clipboard = null as any;
+        if (typeof clip === 'undefined' || clip === null) {
+            clipboard = this.clipboard;
+        } else {
+            clipboard = clip;
+        }
 		const {
 			onAdd,
 			propertiesToInclude,
 			gridOption: { grid = 10 },
-			clipboard,
 			isCut,
 		} = this;
 		const padding = isCut ? 0 : grid;

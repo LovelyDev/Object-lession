@@ -38,7 +38,7 @@ class MapProperties extends Component {
         return true;
     }
     getAllImages = () => {
-        getData('/images')
+        getData(`/images?project=${this.props.projectId}`)
         .then(res => {
             let mediaList = [];
             res.data.forEach(img => {
@@ -75,7 +75,9 @@ class MapProperties extends Component {
         /* ---------------------------------------------- */
         let formData = new FormData();
         formData.append('files.image_file', file, fileMeta.fileName);
-        formData.append('data', JSON.stringify({}));
+        formData.append('data', JSON.stringify({
+            project: this.props.projectId
+        }));
         const token = localStorage.getItem('Token');
         const res = await axios({
             method: 'post',

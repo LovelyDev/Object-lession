@@ -891,7 +891,7 @@ class EventHandler {
 				this.handler.copy();
 			} else if (this.handler.shortcutHandler.isCtrlV(e) && !clipboard) {
 				e.preventDefault();
-				this.handler.paste();
+				this.handler.paste(null);
 			} else if (this.handler.shortcutHandler.isCtrlX(e)) {
 				e.preventDefault();
 				this.handler.cut();
