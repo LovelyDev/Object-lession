@@ -13,12 +13,13 @@ class Page extends Component {
         const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick, index } = this.props;
         // const img = getPreviewImgById(id);
         return <div className="panel-list-item">
+            <span className="panel-list-item-card-number">{index + 1}</span>
             <div
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
             >
                 {/* <img className="panel-list-item-page-preview" src={img} /> */}
-                {index + 1}
+                {id}
             </div>
             <div className="panel-list-item-btn-group">
                 {(pageCount !== 1) &&

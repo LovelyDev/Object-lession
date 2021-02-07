@@ -13,10 +13,11 @@
     float: left;
     display: flex;
     border-radius: 10px;
+}
+
+.panel-list-item-card-number {
     font-size: large;
-    font-weight: 700;
-    align-items: center;
-    justify-content: center;
+    font-weight: 900;
 }
 
 .border-black {
