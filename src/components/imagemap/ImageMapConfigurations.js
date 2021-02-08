@@ -86,13 +86,13 @@ class ImageMapConfigurations extends Component {
 					tabBarStyle={{ marginTop: 60 }}
 				>
                     <Tabs.TabPane tab={<Icon name="toolbox" />} key="project">
-						<ProjectProperties onChange={onChange} projectConf={projectConf} />
+						<ProjectProperties onChange={onChange} projectConf={projectConf} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
 						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cogs" />} key="node">
-						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} projectId={projectId} />
+						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="vine" prefix="fab" />} key="animations">
 						<Animations animations={animations} onChangeAnimations={onChangeAnimations} canvasRef={canvasRef}/>
