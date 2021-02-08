@@ -153,40 +153,24 @@ class NodeProperties extends Component {
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Row className="object-attribute-row">
-                        <Col span={12}>
-                            <span>Is quantity:</span>
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Type</span>
                         </Col>
-                        <Col span={12}>
+                        <Col span={15}>
                             <Form.Item colon={false}>
-                                {getFieldDecorator('is_quantity', {
-                                    valuePropName: 'checked',
-                                    initialValue: data.is_quantity,
-                                })(<Checkbox>
-                                </Checkbox>)}
+                                {getFieldDecorator('is_quantity_type', {
+                                    initialValue: data.is_quantity_type || null,
+                                })(<Select
+                                    placeholder="Type"
+                                >
+                                    <Option value="empty" style={{color: "transparent"}}><span>&#8203;</span></Option>
+                                    <Option value="quantity">Quantity</Option>
+                                </Select>)}
                             </Form.Item>
                         </Col>
                     </Row>
-                    {data.is_quantity && 
-                        <Row className="card-attribute-row">
-                            <Col span={9}>
-                                <span>Type</span>
-                            </Col>
-                            <Col span={15}>
-                                <Form.Item colon={false}>
-                                    {getFieldDecorator('is_quantity_type', {
-                                        initialValue: data.is_quantity_type || null,
-                                    })(<Select
-                                        placeholder="Type"
-                                    >
-                                        <Option value="empty">Empty</Option>
-                                        <Option value="quantity">Quantity</Option>
-                                    </Select>)}
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    }
-                    {data.is_quantity && data.is_quantity_type === 'quantity' &&
+                    {data.is_quantity_type === 'quantity' &&
                         <Row className="card-attribute-row">
                             <Col span={9}>
                                 <span>Quantity</span>
