@@ -50,7 +50,7 @@ class Canvas extends Component<CanvasProps, IState> {
 		const mergedCanvasOption = Object.assign({}, defaults.canvasOption, canvasOption, {
 			width,
 			height,
-			selection: editable,
+            selection: editable,
 		});
 		this.canvas = new fabric.Canvas(`canvas_${id}`, mergedCanvasOption);
 		this.canvas.setBackgroundColor(mergedCanvasOption.backgroundColor, this.canvas.renderAll.bind(this.canvas));

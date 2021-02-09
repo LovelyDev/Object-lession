@@ -49,39 +49,40 @@ class Project extends Component {
         const { id } = this.props;
         let { history } = this.props;
         const { coverImage } = this.state;
-        return (
-            <div className="project-item">
-                <img src={coverImage} className="project-item-cover-image" />
-                <div className="project-item-header">
-                    <CommonButton
-                        className="rde-action-btn"
-                        shape="circle"
-                        icon="arrow-right"
-                        tooltipTitle={i18n.t('Display')}
-                        style={{fontSize: 35, height: "auto", margin: "0 10px 0 0"}}
-                        onClick={() => {
-                            onProjectClick(id);
-                            history.push(`/projects/${id}`);
-                        }}
-                    />
+        return (<div className="project-item">
+                <div className="project-item-body">
+                    <img src={coverImage} className="project-item-cover-image" />
+                    <div className="project-item-header">
+                        <CommonButton
+                            className="rde-action-btn"
+                            shape="circle"
+                            icon="arrow-right"
+                            tooltipTitle={i18n.t('Display')}
+                            style={{fontSize: 35, height: "auto", margin: "0 10px 0 0"}}
+                            onClick={() => {
+                                onProjectClick(id);
+                                history.push(`/projects/${id}`);
+                            }}
+                        />
+                    </div>
+                    <div className="project-item-content">
+                        <CommonButton
+                            className="rde-action-btn"
+                            shape="circle"
+                            icon="trash"
+                            tooltipTitle={i18n.t('action.delete')}
+                            onClick={this.onDeleteProjectClick}
+                        />
+                        <CommonButton
+                            className="rde-action-btn duplicate-btn"
+                            shape="circle"
+                            icon="clone"
+                            tooltipTitle={i18n.t('Duplicate')}
+                            onClick={this.onDuplicateProjectClick}
+                        />
+                    </div>
                 </div>
-                <div className="project-item-content">
-                    <span>{name}</span>
-                    <CommonButton
-                        className="rde-action-btn"
-                        shape="circle"
-                        icon="trash"
-                        tooltipTitle={i18n.t('action.delete')}
-                        onClick={this.onDeleteProjectClick}
-                    />
-                    <CommonButton
-                        className="rde-action-btn duplicate-btn"
-                        shape="circle"
-                        icon="clone"
-                        tooltipTitle={i18n.t('Duplicate')}
-                        onClick={this.onDuplicateProjectClick}
-                    />
-                </div>
+                <span>{name}</span>
             </div>
         )
     }

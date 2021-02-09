@@ -11,8 +11,13 @@
     width: 75%;
     height: 100%;
     float: left;
-    display: inline;
+    display: flex;
     border-radius: 10px;
+}
+
+.panel-list-item-card-number {
+    font-size: large;
+    font-weight: 900;
 }
 
 .border-black {

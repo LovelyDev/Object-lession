@@ -153,7 +153,9 @@ class InteractionHandler {
 			this.handler.interactionMode === 'arrow' ||
 			this.handler.interactionMode === 'line' ||
             this.handler.interactionMode === 'polygon' ||
-            this.handler.interactionMode === 'photspot'
+            this.handler.interactionMode === 'photspot' ||
+            this.handler.interactionMode === 'path' ||
+            this.handler.interactionMode === 'bezier'
 		);
 	};
 

@@ -383,6 +383,387 @@ class DrawingHandler {
 		// },
 	};
 
+    path = {
+		init: () => {
+			this.handler.interactionHandler.drawing('path');
+			this.handler.pointArray = [];
+			this.handler.lineArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+		},
+		finish: () => {
+			this.handler.pointArray.forEach(point => {
+				this.handler.canvas.remove(point);
+			});
+			this.handler.lineArray.forEach(line => {
+				this.handler.canvas.remove(line);
+			});
+			this.handler.canvas.remove(this.handler.activeLine);
+			this.handler.canvas.remove(this.handler.activeShape);
+			this.handler.pointArray = [];
+			this.handler.lineArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+			this.handler.canvas.renderAll();
+			this.handler.interactionHandler.selection();
+		},
+		addPoint: (opt: FabricEvent) => {
+			const { e, absolutePointer } = opt;
+			const { x, y } = absolutePointer;
+			const circle = new fabric.Circle({
+				radius: 3,
+				fill: 'green',
+				stroke: '#333333',
+				strokeWidth: 0.5,
+				left: x,
+				top: y,
+				selectable: false,
+				hasBorders: false,
+				hasControls: false,
+				originX: 'center',
+				originY: 'center',
+				hoverCursor: 'pointer',
+			}) as FabricObject<fabric.Circle>;
+			circle.set({
+				id: v4(),
+			});
+			const points = [x, y, x, y];
+			const line = new fabric.Line(points, {
+				strokeWidth: 2,
+				fill: '#cccccc',
+				stroke: '#333333',
+				originX: 'center',
+				originY: 'center',
+				selectable: false,
+				hasBorders: false,
+				hasControls: false,
+				evented: false,
+			}) as FabricObject<fabric.Line>;
+			line.set({
+				class: 'line',
+			});
+			if (this.handler.activeShape) {
+				const position = this.handler.canvas.getPointer(e);
+				// const activeShapePoints = this.handler.activeShape.get('points') as Array<{ x: number; y: number }>;
+				// activeShapePoints.push({
+				// 	x: position.x,
+				// 	y: position.y,
+                // });
+                const newLine = ['L', position.x, position.y];
+                this.handler.activeShape.path.push(newLine as any);
+				// let path = new fabric.Path(activeShapePoints, {
+				// 	stroke: '#333333',
+				// 	strokeWidth: 1,
+				// 	fill: '#cccccc',
+				// 	opacity: 0.1,
+				// 	selectable: false,
+				// 	hasBorders: false,
+				// 	hasControls: false,
+				// 	evented: false,
+				// });
+				// this.handler.canvas.remove(this.handler.activeShape);
+				// this.handler.canvas.add(path);
+				// this.handler.activeShape = path;
+				this.handler.canvas.renderAll();
+			} else {
+				const path = new fabric.Path(`M ${x} ${y}`, {
+					stroke: '#333333',
+                    strokeWidth: 1,
+                    fill: '',
+					selectable: false,
+					hasBorders: false,
+					hasControls: false,
+					evented: false,
+				});
+				this.handler.activeShape = path;
+				this.handler.canvas.add(path);
+			}
+			this.handler.activeLine = line;
+			this.handler.pointArray.push(circle);
+			this.handler.lineArray.push(line);
+			this.handler.canvas.add(line);
+			this.handler.canvas.add(circle);
+		},
+		generate: (pointArray: FabricObject<fabric.Circle>[]) => {
+			const points = [] as any[];
+			const id = v4();
+			pointArray.forEach(point => {
+				points.push({
+					x: point.left,
+					y: point.top,
+				});
+				this.handler.canvas.remove(point);
+			});
+			this.handler.lineArray.forEach(line => {
+				this.handler.canvas.remove(line);
+			});
+			this.handler.canvas.remove(this.handler.activeShape).remove(this.handler.activeLine);
+			const option = {
+				id,
+				points,
+				type: 'path',
+				stroke: '#333333',
+                strokeWidth: 3,
+                fill: '',
+				objectCaching: !this.handler.editable,
+				name: 'New path',
+				superType: 'drawing',
+			};
+			this.handler.add(option, false);
+			this.handler.pointArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+			this.handler.interactionHandler.selection();
+		},
+		// TODO... polygon resize
+		// createResize: (target, points) => {
+		//     points.forEach((point, index) => {
+		//         const { x, y } = point;
+		//         const circle = new fabric.Circle({
+		//             name: index,
+		//             radius: 3,
+		//             fill: '#ffffff',
+		//             stroke: '#333333',
+		//             strokeWidth: 0.5,
+		//             left: x,
+		//             top: y,
+		//             hasBorders: false,
+		//             hasControls: false,
+		//             originX: 'center',
+		//             originY: 'center',
+		//             hoverCursor: 'pointer',
+		//             parentId: target.id,
+		//         });
+		//         this.handler.pointArray.push(circle);
+		//     });
+		//     const group = [target].concat(this.pointArray);
+		//     this.handler.canvas.add(new fabric.Group(group, { type: 'polygon', id: v4() }));
+		// },
+		// removeResize: () => {
+		//     if (this.handler.pointArray) {
+		//         this.handler.pointArray.forEach((point) => {
+		//             this.handler.canvas.remove(point);
+		//         });
+		//         this.handler.pointArray = [];
+		//     }
+		// },
+		// movingResize: (target, e) => {
+		//     const points = target.diffPoints || target.points;
+		//     const diffPoints = [];
+		//     points.forEach((point) => {
+		//         diffPoints.push({
+		//             x: point.x + e.movementX,
+		//             y: point.y + e.movementY,
+		//         });
+		//     });
+		//     target.set({
+		//         diffPoints,
+		//     });
+		//     this.handler.canvas.renderAll();
+		// },
+    };
+    bezier = {
+		init: () => {
+			this.handler.interactionHandler.drawing('bezier');
+			this.handler.pointArray = [];
+			this.handler.lineArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+		},
+		finish: () => {
+			this.handler.pointArray.forEach(point => {
+				this.handler.canvas.remove(point);
+			});
+			this.handler.lineArray.forEach(line => {
+				this.handler.canvas.remove(line);
+			});
+			this.handler.canvas.remove(this.handler.activeLine);
+			this.handler.canvas.remove(this.handler.activeShape);
+			this.handler.pointArray = [];
+			this.handler.lineArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+			this.handler.canvas.renderAll();
+			this.handler.interactionHandler.selection();
+		},
+		addPoint: (opt: FabricEvent) => {
+			const { e, absolutePointer } = opt;
+			const { x, y } = absolutePointer;
+			const circle = new fabric.Circle({
+				radius: 3,
+				fill: 'green',
+				stroke: '#333333',
+				strokeWidth: 0.5,
+				left: x,
+				top: y,
+				selectable: false,
+				hasBorders: false,
+				hasControls: false,
+				originX: 'center',
+				originY: 'center',
+				hoverCursor: 'pointer',
+			}) as FabricObject<fabric.Circle>;
+			circle.set({
+				id: v4(),
+			});
+			const points = [x, y, x, y];
+			const line = new fabric.Line(points, {
+				strokeWidth: 2,
+				fill: '#cccccc',
+				stroke: '#333333',
+				originX: 'center',
+				originY: 'center',
+				selectable: false,
+				hasBorders: false,
+				hasControls: false,
+				evented: false,
+			}) as FabricObject<fabric.Line>;
+			line.set({
+				class: 'line',
+			});
+			if (this.handler.activeShape) {
+                const position = this.handler.canvas.getPointer(e);
+                const pl = this.handler.pointArray.length;
+				// const activeShapePoints = this.handler.activeShape.get('points') as Array<{ x: number; y: number }>;
+				// activeShapePoints.push({
+				// 	x: position.x,
+				// 	y: position.y,
+                // });
+                const path = this.handler.activeShape.get('path');
+                if (pl === 1) {
+                    path.push([]);
+                    path[1][0] = 'Q';
+                    path[1][3] = position.x;
+                    path[1][4] = position.y;
+                } else if (pl === 2) {
+                    path[1][1] = position.x;
+                    path[1][2] = position.y;
+                    console.log("path", path);
+                }
+                let bezier = new fabric.Path(path, {
+                    stroke: '#333333',
+                    strokeWidth: 1,
+                    fill: '',
+					selectable: false,
+					hasBorders: false,
+					hasControls: false,
+					evented: false,
+                });
+                // this.handler.activeShape.path.push(newLine as any);
+				// let path = new fabric.Path(activeShapePoints, {
+				// 	stroke: '#333333',
+				// 	strokeWidth: 1,
+				// 	fill: '#cccccc',
+				// 	opacity: 0.1,
+				// 	selectable: false,
+				// 	hasBorders: false,
+				// 	hasControls: false,
+				// 	evented: false,
+				// });
+				this.handler.canvas.remove(this.handler.activeShape);
+				this.handler.canvas.add(bezier);
+				this.handler.activeShape = bezier;
+				this.handler.canvas.renderAll();
+			} else {
+				const bezier = new fabric.Path(`M ${x} ${y}`, {
+					stroke: '#333333',
+                    strokeWidth: 1,
+                    fill: '',
+					selectable: false,
+					hasBorders: false,
+					hasControls: false,
+					evented: false,
+				});
+				this.handler.activeShape = bezier;
+				this.handler.canvas.add(bezier);
+			}
+			this.handler.activeLine = line;
+			this.handler.pointArray.push(circle);
+            this.handler.lineArray.push(line);
+            if (this.handler.pointArray.length === 1) {
+                this.handler.canvas.add(line);
+            } else if (this.handler.pointArray.length === 2) {
+                console.log("bezier second point", this.handler.activeLine);
+                this.handler.canvas.remove(this.handler.activeLine);
+            }
+            this.handler.canvas.add(circle);
+            this.handler.canvas.renderAll();
+		},
+		generate: () => {
+			const id = v4();
+			this.handler.pointArray.forEach(point => {
+				this.handler.canvas.remove(point);
+			});
+			this.handler.lineArray.forEach(line => {
+				this.handler.canvas.remove(line);
+            });
+            const path = [...this.handler.activeShape.get('path')];
+			this.handler.canvas.remove(this.handler.activeShape).remove(this.handler.activeLine);
+			const option = {
+                id,
+                path,
+				type: 'bezier',
+				stroke: '#333333',
+                strokeWidth: 3,
+                fill: '',
+				objectCaching: !this.handler.editable,
+				name: 'New bezier',
+				superType: 'drawing',
+			};
+			this.handler.add(option, false);
+			this.handler.pointArray = [];
+			this.handler.activeLine = null;
+			this.handler.activeShape = null;
+			this.handler.interactionHandler.selection();
+		},
+		// TODO... polygon resize
+		// createResize: (target, points) => {
+		//     points.forEach((point, index) => {
+		//         const { x, y } = point;
+		//         const circle = new fabric.Circle({
+		//             name: index,
+		//             radius: 3,
+		//             fill: '#ffffff',
+		//             stroke: '#333333',
+		//             strokeWidth: 0.5,
+		//             left: x,
+		//             top: y,
+		//             hasBorders: false,
+		//             hasControls: false,
+		//             originX: 'center',
+		//             originY: 'center',
+		//             hoverCursor: 'pointer',
+		//             parentId: target.id,
+		//         });
+		//         this.handler.pointArray.push(circle);
+		//     });
+		//     const group = [target].concat(this.pointArray);
+		//     this.handler.canvas.add(new fabric.Group(group, { type: 'polygon', id: v4() }));
+		// },
+		// removeResize: () => {
+		//     if (this.handler.pointArray) {
+		//         this.handler.pointArray.forEach((point) => {
+		//             this.handler.canvas.remove(point);
+		//         });
+		//         this.handler.pointArray = [];
+		//     }
+		// },
+		// movingResize: (target, e) => {
+		//     const points = target.diffPoints || target.points;
+		//     const diffPoints = [];
+		//     points.forEach((point) => {
+		//         diffPoints.push({
+		//             x: point.x + e.movementX,
+		//             y: point.y + e.movementY,
+		//         });
+		//     });
+		//     target.set({
+		//         diffPoints,
+		//     });
+		//     this.handler.canvas.renderAll();
+		// },
+    };
+
 	line = {
 		init: () => {
 			this.handler.interactionHandler.drawing('line');

@@ -10,9 +10,10 @@ class Page extends Component {
         super(props);
     }
     render() {
-        const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick } = this.props;
+        const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick, index } = this.props;
         // const img = getPreviewImgById(id);
         return <div className="panel-list-item">
+            <span className="panel-list-item-card-number">{index + 1}</span>
             <div
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
@@ -84,8 +85,9 @@ class PageListPanel extends Component {
                         </div>
                         <div>
                             {
-                                pages.map(page =>
+                                pages.map((page,index) =>
                                     <Page
+                                        index={index}
                                         id={page.id}
                                         key={page.id}
                                         active={ page.id === curPageId }

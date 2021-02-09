@@ -366,7 +366,7 @@ class EventHandler {
 			return;
 		}
         const { target } = event;
-        if (target.id === 'workarea') {
+        if (target && target.id === 'workarea') {
             const { onMouseDown } = this.handler;
             onMouseDown(target);
         }
@@ -429,6 +429,23 @@ class EventHandler {
 				} else {
 					this.handler.drawingHandler.photspot.addPoint(event);
 				}
+            } else if (this.handler.interactionMode === 'path') {
+                this.handler.drawingHandler.path.addPoint(event);
+                // if (target && this.handler.pointArray.length && target.id === this.handler.pointArray[0].id) {
+				// 	this.handler.drawingHandler.path.generate(this.handler.pointArray);
+				// } else {
+					
+				// }
+            } else if (this.handler.interactionMode === 'bezier') {
+                this.handler.drawingHandler.bezier.addPoint(event);
+                if (this.handler.pointArray.length === 3) {
+                    this.handler.drawingHandler.bezier.generate();
+                }
+                // if (target && this.handler.pointArray.length && target.id === this.handler.pointArray[0].id) {
+				// 	this.handler.drawingHandler.path.generate(this.handler.pointArray);
+				// } else {
+					
+				// }
             }
 		}
 	};
@@ -460,15 +477,15 @@ class EventHandler {
 		if (this.handler.interactionMode === 'polygon') {
 			if (this.handler.activeLine && this.handler.activeLine.class === 'line') {
 				const pointer = this.handler.canvas.getPointer(event.e);
-				this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
+				// this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
 				const points = this.handler.activeShape.get('points');
 				points[this.handler.pointArray.length] = {
 					x: pointer.x,
 					y: pointer.y,
-				};
+                };
 				this.handler.activeShape.set({
 					points,
-				});
+                });
 				this.handler.canvas.requestRenderAll();
 			}
 		} else if (this.handler.interactionMode === 'line') {
@@ -501,6 +518,47 @@ class EventHandler {
 				this.handler.activeShape.set({
 					points,
 				});
+				this.handler.canvas.requestRenderAll();
+			}
+		} else if (this.handler.interactionMode === 'path') {
+			if (this.handler.activeLine && this.handler.activeLine.class === 'line') {
+				const pointer = this.handler.canvas.getPointer(event.e);
+				this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
+				// const points = this.handler.activeShape.get('points');
+				// points[this.handler.pointArray.length] = {
+				// 	x: pointer.x,
+				// 	y: pointer.y,
+				// };
+				// this.handler.activeShape.set({
+				// 	points,
+				// });
+				this.handler.canvas.requestRenderAll();
+			}
+		} else if (this.handler.interactionMode === 'bezier') {
+			if (this.handler.activeLine && this.handler.activeLine.class === 'line') {
+				const pointer = this.handler.canvas.getPointer(event.e);
+				this.handler.activeLine.set({ x2: pointer.x, y2: pointer.y });
+				let path = this.handler.activeShape.get('path');
+                const pl = this.handler.pointArray.length;
+                if (pl === 2) {
+                    path[1][1] = pointer.x;
+                    path[1][2] = pointer.y;
+                }
+				this.handler.activeShape.set({
+					path,
+                });
+                const bezier = new fabric.Path(path, {
+                    stroke: '#333333',
+                    strokeWidth: 1,
+                    fill: '',
+					selectable: false,
+					hasBorders: false,
+					hasControls: false,
+					evented: false,
+                })
+                this.handler.canvas.remove(this.handler.activeShape);
+                this.handler.canvas.add(bezier);
+                this.handler.activeShape = bezier;
 				this.handler.canvas.requestRenderAll();
 			}
 		}
@@ -791,7 +849,11 @@ class EventHandler {
 					this.handler.drawingHandler.arrow.finish();
 				} else if (this.handler.interactionMode === 'link') {
 					this.handler.linkHandler.finish();
-				}
+				} else if (this.handler.interactionMode === 'path') {
+                    this.handler.drawingHandler.path.generate(this.handler.pointArray);
+                } else if (this.handler.interactionMode === 'bezier') {
+                    this.handler.drawingHandler.bezier.generate();
+                }
 			}
 			return;
 		}
@@ -829,7 +891,7 @@ class EventHandler {
 				this.handler.copy();
 			} else if (this.handler.shortcutHandler.isCtrlV(e) && !clipboard) {
 				e.preventDefault();
-				this.handler.paste();
+				this.handler.paste(null);
 			} else if (this.handler.shortcutHandler.isCtrlX(e)) {
 				e.preventDefault();
 				this.handler.cut();

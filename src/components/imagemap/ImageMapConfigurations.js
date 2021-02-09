@@ -60,7 +60,8 @@ class ImageMapConfigurations extends Component {
 			onChangeAnimations,
 			onChangeStyles,
             onChangeDataSources,
-            confActiveTab
+            confActiveTab,
+            projectId
 		} = this.props;
 		const { collapse } = this.state;
         const { onCollapse } = this.handlers;
@@ -85,10 +86,10 @@ class ImageMapConfigurations extends Component {
 					tabBarStyle={{ marginTop: 60 }}
 				>
                     <Tabs.TabPane tab={<Icon name="toolbox" />} key="project">
-						<ProjectProperties onChange={onChange} projectConf={projectConf} />
+						<ProjectProperties onChange={onChange} projectConf={projectConf} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
-						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} />
+						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cogs" />} key="node">
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />

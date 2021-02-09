@@ -61,6 +61,11 @@ class AnimationModal extends Component {
         newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], d_object: value});
         this.setState({ animationSteps: [...newAnimationSteps] });
     }
+    onTPathChange = (index, value) => {
+        let newAnimationSteps = this.state.animationSteps;
+        newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], t_path: value});
+        this.setState({ animationSteps: [...newAnimationSteps] });
+    }
     onTypeChange = (index, value) => {
         let newAnimationSteps = this.state.animationSteps;
         newAnimationSteps.splice(index, 1, {...newAnimationSteps[index], type: value});
@@ -117,6 +122,7 @@ class AnimationModal extends Component {
                                 onTypeChange={this.onTypeChange}
                                 onDurationChange={this.onDurationChange}
                                 onDPositionChange={this.onDPositionChange}
+                                onTPathChange={this.onTPathChange}
                                 objects={objects}
                             />
                         </Scrollbar>

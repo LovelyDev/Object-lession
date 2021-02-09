@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Collapse, List, Input, Checkbox, InputNumber, Row, Col } from 'antd';
+import { Form, Collapse, List, Input, Checkbox, InputNumber, Row, Col, Select } from 'antd';
 import i18n from 'i18next';
 
 import PropertyDefinition from './PropertyDefinition';
@@ -9,6 +9,7 @@ import { Flex } from '../../flex';
 import './NodeProperties.css'
 
 const { Panel } = Collapse;
+const { Option } = Select;
 
 class NodeProperties extends Component {
     constructor(props) {
@@ -75,8 +76,8 @@ class NodeProperties extends Component {
         const showArrow = false;
         const  { getFieldDecorator } = form;
         let data, workarea;
-        if (selectedItem) {
-            data = selectedItem;
+        if (selectedItem && canvasRef) {
+            data = Array.isArray(selectedItem) ? selectedItem[0] : selectedItem;
             workarea = canvasRef.handler.workarea;
             if (Array.isArray(selectedItem)) {
                 selectedItem.forEach(item => {
@@ -92,7 +93,7 @@ class NodeProperties extends Component {
 		return (
 			<Scrollbar>
 				<Form layout="horizontal" colon={false}>
-                {selectedItem ? (<div className="object-attribute">
+                {data && workarea ? (<div className="object-attribute">
                     <Row className="object-attribute-row">
                         <Col span={12}>
                             <span>Name:</span>
@@ -152,6 +153,43 @@ class NodeProperties extends Component {
                             </Form.Item>
                         </Col>
                     </Row>
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Type</span>
+                        </Col>
+                        <Col span={15}>
+                            <Form.Item colon={false}>
+                                {getFieldDecorator('is_quantity_type', {
+                                    initialValue: data.is_quantity_type || null,
+                                })(<Select
+                                    placeholder="Type"
+                                >
+                                    <Option value="empty" style={{color: "transparent"}}><span>&#8203;</span></Option>
+                                    <Option value="quantity">Quantity</Option>
+                                </Select>)}
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    {data.is_quantity_type === 'quantity' &&
+                        <Row className="card-attribute-row">
+                            <Col span={9}>
+                                <span>Quantity</span>
+                            </Col>
+                            <Col span={15}>
+                                <Form.Item colon={false}>
+                                    {getFieldDecorator('quantity', {
+                                        rules: [
+                                            {
+                                                required: false,
+                                                message: i18n.t('validation.enter-arg', { arg: i18n.t('Quantity') }),
+                                            },
+                                        ],
+                                        initialValue: data.quantity || '',
+                                    })(<Input />)}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    }
                     <Row>
                         <Col span={12}>
                             <Form.Item label={i18n.t('common.left')} colon={false}>
