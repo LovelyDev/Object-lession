@@ -1,23 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Collapse, notification, Input, message } from 'antd';
+import { Collapse, notification, Input, message, Modal, Button } from 'antd';
 import { v4 } from 'uuid';
 import classnames from 'classnames';
 import i18n from 'i18next';
 import AWS from 'aws-sdk'
 import axios from 'axios';
-
+import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
 import { Flex } from '../flex';
 import Icon from '../icon/Icon';
-import Scrollbar from '../common/Scrollbar';
-import CommonButton from '../common/CommonButton';
-import { SVGModal } from '../common';
-import {FileLibraryListItem, ReactMediaLibrary, FileMeta} from 'react-media-library';
+import {
+    SVGModal, 
+    MediaLibrary,
+    Scrollbar,
+    CommonButton,
+} from '../common';
 import { s3 } from './config/aws';
 import { API_URL } from '../../config/env';
-import axiosInstance from '../../config/axios';
-import FileCard from './FileCard';
-const { getData, postData, putData, deleteData } = axiosInstance;
 
 notification.config({
 	top: 80,
@@ -45,10 +44,9 @@ class ImageMapItems extends Component {
             descriptors: {},
             filteredDescriptors: [],
             svgModalVisible: false,
-            rmlDisplay: false,
-            fileLibraryList: [],
+            mlDisplay: false,
             imageItem: null,
-            centered: null
+            centered: null,
         };
     }
 	static propTypes = {
@@ -139,8 +137,7 @@ class ImageMapItems extends Component {
 				return;
             }
             if (item.type === 'image') {
-                this.getAllImages();
-                this.setState({rmlDisplay: true, imageItem: item, centered});
+                this.setState({mlDisplay: true, imageItem: item, centered});
             } else {
                 canvasRef.handler.add(option, centered);
             }
@@ -153,7 +150,10 @@ class ImageMapItems extends Component {
 		},
 		onDrawingItem: item => {
 			const { canvasRef } = this.props;
-			if (canvasRef.handler.interactionMode === 'polygon' || canvasRef.handler.interactionMode === 'photspot') {
+            if (canvasRef.handler.interactionMode === 'polygon' ||
+            canvasRef.handler.interactionMode === 'photspot' ||
+            canvasRef.handler.interactionMode === 'path' ||
+            canvasRef.handler.interactionMode === 'bezier') {
 				message.info('Already drawing');
 				return;
 			}
@@ -163,6 +163,10 @@ class ImageMapItems extends Component {
 				canvasRef.handler.drawingHandler.arrow.init();
             } else if (item.option.type === 'photspot') {
                 canvasRef.handler.drawingHandler.photspot.init();
+            } else if (item.option.type === 'path') {
+                canvasRef.handler.drawingHandler.path.init();
+            } else if (item.option.type === 'bezier') {
+                canvasRef.handler.drawingHandler.bezier.init();
             } else {
 				canvasRef.handler.drawingHandler.polygon.init();
 			}
@@ -323,29 +327,25 @@ class ImageMapItems extends Component {
             }
         })
     }
-    getAllImages = () => {
-        getData('/images')
-        .then(res => {
-            let mediaList = [];
-            res.data.forEach(img => {
-                const { image_file } = img;
-                if (!image_file) return;
-                const { id, caption, size, name, mime, created_at, url } = image_file;
-                const newFile = {
-                    "_id": id,
-                    "title": caption,
-                    "size": size,
-                    "fileName": name,
-                    "type": mime,
-                    "createdAt": new Date(created_at),
-                    "thumbnailUrl": url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "")
-                }
-                mediaList.push(newFile);
-            })
-            this.setState({fileLibraryList: mediaList})
-            this.forceUpdate();
-        })
-    }
+    // getAllImages = () => {
+    //     getData(`/images?project=${this.props.projectId}`)
+    //     .then(res => {
+    //         let mediaList = [];
+    //         res.data.forEach(img => {
+    //             const { image_file } = img;
+    //             if (!image_file) return;
+    //             const { caption, size, name, mime, created_at, url } = image_file;
+    //             const newFile = {
+    //                 source: url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", ""),
+    //                 name,
+    //                 id: img.id
+    //             }
+    //             mediaList.push(newFile);
+    //         })
+    //         this.setState({fileLibraryList: [...mediaList]})
+    //         this.forceUpdate();
+    //     })
+    // }
     uploadFileToS3 = (fileBase64, fileMeta) => {
         const buf = Buffer.from(fileBase64.replace(/^data:image\/\w+;base64,/, ""),'base64');
         const params = {
@@ -402,7 +402,9 @@ class ImageMapItems extends Component {
         /* ---------------------------------------------- */
         let formData = new FormData();
 		formData.append('files.image_file', file, fileMeta.fileName);
-        formData.append('data', JSON.stringify({}));
+        formData.append('data', JSON.stringify({
+            project: this.props.projectId
+        }));
         const token = localStorage.getItem('Token');
         const res = await axios({
             method: 'post',
@@ -435,7 +437,7 @@ class ImageMapItems extends Component {
     selectCallback = (item) => {
         const { canvasRef } = this.props;
         const { imageItem, centered } = this.state;
-        this.setState({rmlDisplay: false});
+        this.setState({mlDisplay: false});
         const id = v4();
         let option = Object.assign({}, imageItem.option, { id });
         option.src = item.thumbnailUrl;
@@ -444,9 +446,31 @@ class ImageMapItems extends Component {
         canvasRef.handler.add(option, centered);
         this.forceUpdate();
     }
+    addImageItems = (selectedImages) => {
+        const { canvasRef } = this.props;
+        const { imageItem, centered } = this.state;
+        let pOffset = 0;
+        selectedImages.forEach(image => {
+            const id = v4();
+            let option = Object.assign({}, imageItem.option, { id });
+            option.src = image.source;
+            option.object_name = image.name.replace(/\.[^/.]+$/, "");
+            option.left += pOffset;
+            option.top += pOffset;
+            pOffset += 10;
+            console.log("imageItems", option);
+            canvasRef.handler.add(option, centered);
+        })
+        this.setState({ mlDisplay: false });
+        this.forceUpdate();
+    }
+    hideMediaLibrary = () => {
+        this.setState({ mlDisplay: false });
+        this.forceUpdate();
+    }
 	render() {
-		const { descriptors } = this.props;
-		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, rmlDisplay, fileLibraryList } = this.state;
+		const { descriptors, projectId } = this.props;
+		const { collapse, textSearch, filteredDescriptors, activeKey, svgModalVisible, svgOption, mlDisplay, fileLibraryList } = this.state;
 		const className = classnames('rde-editor-items', {
 			minimize: collapse,
 		});
@@ -506,17 +530,22 @@ class ImageMapItems extends Component {
 					onCancel={this.handlers.onSVGModalVisible}
 					option={svgOption}
 				/>
-                <ReactMediaLibrary
-                    show={rmlDisplay}
+                {/* <ReactMediaLibrary
+                    show={mlDisplay}
                     onHide={() => {
-                        this.setState({rmlDisplay: false});
+                        this.setState({mlDisplay: false});
                         this.forceUpdate();
-					}}
-					libraryCardComponent={FileCard}
+                    }}
                     fileUploadCallback={this.uploadCallback}
                     fileLibraryList={fileLibraryList}
                     fileSelectCallback={this.selectCallback}
                     fileDeleteCallback={this.deleteCallback}
+                /> */}
+                <MediaLibrary
+                    visible={mlDisplay}
+                    onSelect={this.addImageItems}
+                    onClose={this.hideMediaLibrary}
+                    projectId={projectId}
                 />
 			</div>
 		);
