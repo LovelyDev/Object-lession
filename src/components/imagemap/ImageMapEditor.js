@@ -4,7 +4,6 @@ import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
 import { toast } from 'react-toastify';
-
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
 import ImageMapTitle from './ImageMapTitle';
@@ -12,14 +11,17 @@ import ImageMapHeaderToolbar from './ImageMapHeaderToolbar';
 import ImageMapPreview from './ImageMapPreview';
 import ImageMapConfigurations from './ImageMapConfigurations';
 import SandBox from '../sandbox/SandBox';
-
-import '../../libs/fontawesome-5.2.0/css/all.css';
-import '../../styles/index.less';
-import Container from '../common/Container';
-import CommonButton from '../common/CommonButton';
+import {
+    Container,
+    CommonButton,
+    MediaLibrary,
+} from '../common';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
 import axios from '../../config/axios';
+import { workarea } from '../../config/env';
+import '../../libs/fontawesome-5.2.0/css/all.css';
+import '../../styles/index.less';
 const { getData, postData, putData, deleteData } = axios;
 
 const propertiesToInclude = [
@@ -104,6 +106,7 @@ class ImageMapEditor extends Component {
             height: 400,
             coverImage: './images/sample/transparentBg.png',
             clipboard: null,
+            mlDisplay: false,
         };
     }
 	
@@ -832,7 +835,37 @@ class ImageMapEditor extends Component {
         },
         onChangeConfTab: (activeKey) => {
             this.setState({ confActiveTab: activeKey });
-        }
+        },
+        closeMediaLibrary: () => {
+            this.setState({ mlDisplay: false });
+            this.forceUpdate();
+        },
+        showMediaLibrary: () => {
+            this.setState({ mlDisplay: true });
+            this.forceUpdate();
+        },
+        bulkUpload: (selectedImages) => {
+            const { canvasRefs } = this.state;
+            const newCanvasRefs = [...canvasRefs];
+            selectedImages.forEach(img => {
+                const wa = {
+                    ...workarea,
+                    src: img.source
+                };
+                const id = v4();
+                newCanvasRefs.push({
+                    id, 
+                    canvasRef: null,
+                    isDuplicated: true,
+                    objects: [wa]
+                })
+            })
+            this.setState({
+                canvasRefs: newCanvasRefs,
+                mlDisplay: false
+            });
+            this.forceUpdate();
+        } 
 	};
 
 	shortcutHandlers = {
@@ -953,9 +986,13 @@ class ImageMapEditor extends Component {
             confActiveTab,
             width,
             height,
-            coverImage
+            coverImage,
+            mlDisplay,
         } = this.state;
 		let { canvasRefs } = this.state;
+        const {
+            projectId,
+        } = this.props;
 		const {
 			onAdd,
 			onRemove,
@@ -978,7 +1015,10 @@ class ImageMapEditor extends Component {
 			onChangeDataSources,
             onSaveImage,
             onSaveProject,
-            onChangeConfTab
+            onChangeConfTab,
+            closeMediaLibrary,
+            showMediaLibrary,
+            bulkUpload,
         } = this.handlers;
         const projectConf = {
             width,
@@ -990,8 +1030,16 @@ class ImageMapEditor extends Component {
                 <CommonButton
 					className="rde-action-btn"
 					shape="circle"
+                    icon="upload"
+					tooltipTitle={i18n.t('Bulk upload')}
+					onClick={showMediaLibrary}
+					tooltipPlacement="bottomRight"
+				/>
+                <CommonButton
+					className="rde-action-btn"
+					shape="circle"
                     icon="save"
-                    disabled={!this.props.projectId}
+                    disabled={!projectId}
 					tooltipTitle={i18n.t('action.save')}
 					onClick={onSaveProject}
 					tooltipPlacement="bottomRight"
@@ -1039,6 +1087,12 @@ class ImageMapEditor extends Component {
 					onClick={onSaveImage}
 					tooltipPlacement="bottomRight"
 				/>
+                <MediaLibrary
+                    visible={mlDisplay}
+                    projectId={projectId}
+                    onClose={closeMediaLibrary}
+                    onSelect={bulkUpload}
+                />
 			</React.Fragment>
 		);
 		const titleContent = (
@@ -1055,7 +1109,7 @@ class ImageMapEditor extends Component {
 					}}
 					canvasRef={this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef}
                     descriptors={descriptors}
-                    projectId={this.props.projectId}
+                    projectId={projectId}
 				/>
                 <PageListPanel
 					onPanelStateChange={this.onPanelStateChange}
@@ -1134,7 +1188,7 @@ class ImageMapEditor extends Component {
                     confActiveTab={confActiveTab}
                     onChangeTab={onChangeConfTab}
                     projectConf={projectConf}
-                    projectId={this.props.projectId}
+                    projectId={projectId}
 				/>
 				<ImageMapPreview
 					preview={preview}
