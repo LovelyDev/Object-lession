@@ -125,34 +125,38 @@ class NodeProperties extends Component {
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Row className="object-attribute-row">
-                        <Col span={12}>
-                            <span>Clone on drag:</span>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item colon={false}>
-                                {getFieldDecorator('clone_on_drag', {
-                                    valuePropName: 'checked',
-                                    initialValue: data.clone_on_drag,
-                                })(<Checkbox>
-                                </Checkbox>)}
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Row className="object-attribute-row">
-                        <Col span={12}>
-                            <span>Return on drag:</span>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item colon={false}>
-                                {getFieldDecorator('return_on_drag', {
-                                    valuePropName: 'checked',
-                                    initialValue: data.return_on_drag,
-                                })(<Checkbox>
-                                </Checkbox>)}
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    {data.dragabble && 
+                    <>
+                        <Row className="object-attribute-row">
+                            <Col span={12}>
+                                <span>Clone on drag:</span>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item colon={false}>
+                                    {getFieldDecorator('clone_on_drag', {
+                                        valuePropName: 'checked',
+                                        initialValue: data.clone_on_drag,
+                                    })(<Checkbox>
+                                    </Checkbox>)}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row className="object-attribute-row">
+                            <Col span={12}>
+                                <span>Return on drag:</span>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item colon={false}>
+                                    {getFieldDecorator('return_on_drag', {
+                                        valuePropName: 'checked',
+                                        initialValue: data.return_on_drag,
+                                    })(<Checkbox>
+                                    </Checkbox>)}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </>
+                    }
                     <Row className="card-attribute-row">
                         <Col span={9}>
                             <span>Type</span>
@@ -166,6 +170,7 @@ class NodeProperties extends Component {
                                 >
                                     <Option value="empty" style={{color: "transparent"}}><span>&#8203;</span></Option>
                                     <Option value="quantity">Quantity</Option>
+                                    <Option value="submit-button">Submit Button</Option>
                                 </Select>)}
                             </Form.Item>
                         </Col>

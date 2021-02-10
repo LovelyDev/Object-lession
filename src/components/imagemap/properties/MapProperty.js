@@ -59,6 +59,20 @@ export default {
                         </Form.Item>
                     </Col>
                 </Row>
+                {data['card-type'] === 'drag-sum' &&
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Answer Quantity</span>
+                        </Col>
+                        <Col span={15}>
+                            <Form.Item colon={false}>
+                                {getFieldDecorator('answer-quantity', {
+                                    initialValue: data['answer-quantity'] || null,
+                                })(<Input />)}
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                }
                 <Row className="card-attribute-row">
                     <Col span={9}>
                         {data['card-type'] === 'select-answer' ?
