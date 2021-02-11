@@ -89,6 +89,7 @@ export const propertiesToInclude = [
     'is_quantity_type',
     'quantity',
     'card-type',
+    'answer-quantity',
     'correct-answer',
     'drag-destination',
     'correct-animation',
