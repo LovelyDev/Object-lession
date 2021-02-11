@@ -39,14 +39,14 @@ class Animations extends Component {
                 alert("Name should not be empty");
                 return;
             }
-            const { onChangeAnimations } = this.props;
+            const { onChangeAnimations, canvasRefId } = this.props;
             const { curModalStatus, curEditNum } = this.state;
             if (curModalStatus === 'add') {
-                onChangeAnimations([...this.props.animations, {name, animationSteps}]);
+                onChangeAnimations(canvasRefId, [...this.props.animations, {name, animationSteps}]);
             } else if (curModalStatus === 'edit') {
                 let newAnimations = this.props.animations;
                 newAnimations.splice(curEditNum, 1, { name, animationSteps });
-                onChangeAnimations([...newAnimations]);
+                onChangeAnimations(canvasRefId, [...newAnimations]);
             }
             this.setState({
                 visible: false
@@ -72,11 +72,13 @@ class Animations extends Component {
 			});
 		},
 		onDelete: index => {
+            const { canvasRefId } = this.props;
 			this.props.animations.splice(index, 1);
-			this.props.onChangeAnimations(this.props.animations);
+			this.props.onChangeAnimations(canvasRefId, this.props.animations);
 		},
 		onClear: () => {
-			this.props.onChangeAnimations([]);
+            const { canvasRefId } = this.props;
+			this.props.onChangeAnimations(canvasRefId, []);
 		},
 		onChange: (props, changedValues, allValues) => {
 			const fields = changedValues[Object.keys(changedValues)[0]];
