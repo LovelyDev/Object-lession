@@ -157,7 +157,7 @@ class AnimationStepList extends Component {
                                         </Col>
                                         <Col span={4}>
                                             <Input placeholder="x" style={{width: 50}} value={animationStep.d_xposition} onChange={(e) => {
-                                                const patt1 = /\D/g;
+                                                const patt1 = /[^\d|-]/g;
                                                 const result = e.target.value.match(patt1);
                                                 if (!result || result.length === 0) {
                                                     this.onDPositionChange('x', index, e.target.value);
@@ -166,7 +166,7 @@ class AnimationStepList extends Component {
                                         </Col>
                                         <Col span={12}>
                                             <Input placeholder="y" style={{width: 50}} value={animationStep.d_yposition} onChange={(e) => {
-                                                const patt1 = /\D/g;
+                                                const patt1 = /[^\d|-]/g;
                                                 const result = e.target.value.match(patt1);
                                                 if (!result || result.length === 0) {
                                                     this.onDPositionChange('y', index, e.target.value);
