@@ -760,12 +760,16 @@ class ImageMapEditor extends Component {
 			anchorEl.remove();
 			this.showLoading(false);
 		},
-		onChangeAnimations: animations => {
+		onChangeAnimations: (canvasRefId, animationsForCard) => {
 			if (!this.state.editing) {
 				this.changeEditing(true);
 			}
+            const { animations } = this.state;
 			this.setState({
-				animations,
+				animations: {
+                    ...animations,
+                    [canvasRefId]: [...animationsForCard]
+                }
 			});
 		},
 		onChangeStyles: styles => {
@@ -1182,13 +1186,14 @@ class ImageMapEditor extends Component {
 					onChangeAnimations={onChangeAnimations}
 					onChangeStyles={onChangeStyles}
 					onChangeDataSources={onChangeDataSources}
-					animations={animations}
+					animations={animations[curCanvasRefId]}
 					styles={styles}
                     dataSources={dataSources}
                     confActiveTab={confActiveTab}
                     onChangeTab={onChangeConfTab}
                     projectConf={projectConf}
                     projectId={projectId}
+                    canvasRefId={curCanvasRefId}
 				/>
 				<ImageMapPreview
 					preview={preview}

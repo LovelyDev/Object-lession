@@ -61,7 +61,8 @@ class ImageMapConfigurations extends Component {
 			onChangeStyles,
             onChangeDataSources,
             confActiveTab,
-            projectId
+            projectId,
+            canvasRefId,
 		} = this.props;
 		const { collapse } = this.state;
         const { onCollapse } = this.handlers;
@@ -95,7 +96,7 @@ class ImageMapConfigurations extends Component {
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="vine" prefix="fab" />} key="animations">
-						<Animations animations={animations} onChangeAnimations={onChangeAnimations} canvasRef={canvasRef}/>
+						<Animations animations={animations} onChangeAnimations={onChangeAnimations} canvasRef={canvasRef} canvasRefId={canvasRefId}/>
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="star-half-alt" />} key="styles">
 						<Styles styles={styles} onChangeStyles={onChangeStyles} />
