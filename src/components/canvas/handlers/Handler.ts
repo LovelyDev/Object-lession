@@ -1023,7 +1023,7 @@ class Handler implements HandlerOptions {
 	 *
 	 */
 	public cut = () => {
-		this.copy();
+		this.copy(null);
 		this.remove();
 		this.isCut = true;
 	};
@@ -1048,100 +1048,97 @@ class Handler implements HandlerOptions {
 	 *
 	 * @returns
 	 */
-	public copy = () => {
-		const { propertiesToInclude } = this;
-        const activeObject = this.canvas.getActiveObject() as FabricObject;
-		console.log("copy1", activeObject);
+	public copy = (handleClipboard: any) => {
+        const { propertiesToInclude } = this;
+		const activeObject = this.canvas.getActiveObject() as FabricObject;
 		if (activeObject && activeObject.superType === 'link') {
-			console.log("copy2", activeObject);
 			return false;
 		}
 		if (activeObject) {
-			console.log("copy3", activeObject);
 			if (typeof activeObject.cloneable !== 'undefined' && !activeObject.cloneable) {
-				console.log("copy4", activeObject);
 				return false;
-            }
-			// if (activeObject.type === 'activeSelection') {
-				// const activeSelection = activeObject as fabric.ActiveSelection;
+			}
+			if (activeObject.type === 'activeSelection') {
+				const activeSelection = activeObject as fabric.ActiveSelection;
 				// if (activeSelection.getObjects().some((obj: any) => obj.superType === 'node')) {
-				// 	if (this.keyEvent.clipboard) {
-				// 		const links = [] as any[];
-				// 		const objects = activeSelection.getObjects().map((obj: any, index: number) => {
-				// 			if (typeof obj.cloneable !== 'undefined' && !obj.cloneable) {
-				// 				return null;
-				// 			}
-				// 			if (obj.fromPort.length) {
-				// 				obj.fromPort.forEach((port: any) => {
-				// 					if (port.links.length) {
-				// 						port.links.forEach((link: any) => {
-				// 							const linkTarget = {
-				// 								fromNodeIndex: index,
-				// 								fromPortId: port.id,
-				// 								type: 'curvedLink',
-				// 								superType: 'link',
-				// 							} as any;
-				// 							const findIndex = activeSelection
-				// 								.getObjects()
-				// 								.findIndex((compObj: any) => compObj.id === link.toNode.id);
-				// 							if (findIndex >= 0) {
-				// 								linkTarget.toNodeIndex = findIndex;
-				// 								links.push(linkTarget);
-				// 							}
-				// 						});
-				// 					}
-				// 				});
-				// 			}
-				// 			return {
-				// 				name: obj.name,
-				// 				description: obj.description,
-				// 				superType: obj.superType,
-				// 				type: obj.type,
-				// 				nodeClazz: obj.nodeClazz,
-				// 				configuration: obj.configuration,
-				// 				properties: {
-				// 					left: activeObject.left + activeObject.width / 2 + obj.left || 0,
-				// 					top: activeObject.top + activeObject.height / 2 + obj.top || 0,
-				// 					iconName: obj.descriptor.icon,
-				// 				},
-				// 			};
-				// 		});
-				// 		this.copyToClipboard(JSON.stringify(objects.concat(links), null, '\t'));
-				// 		return true;
-				// 	}
-					// this.clipboard = activeObject;
-					// return this.clipboard;
+					// if (this.keyEvent.clipboard) {
+						const links = [] as any[];
+						const objects = activeSelection.getObjects().map((obj: any, index: number) => {
+							if (typeof obj.cloneable !== 'undefined' && !obj.cloneable) {
+								return null;
+							}
+							if (obj.fromPort.length) {
+								obj.fromPort.forEach((port: any) => {
+									if (port.links.length) {
+										port.links.forEach((link: any) => {
+											const linkTarget = {
+												fromNodeIndex: index,
+												fromPortId: port.id,
+												type: 'curvedLink',
+												superType: 'link',
+											} as any;
+											const findIndex = activeSelection
+												.getObjects()
+												.findIndex((compObj: any) => compObj.id === link.toNode.id);
+											if (findIndex >= 0) {
+												linkTarget.toNodeIndex = findIndex;
+												links.push(linkTarget);
+											}
+										});
+									}
+								});
+							}
+							return {
+								name: obj.name,
+								description: obj.description,
+								superType: obj.superType,
+								type: obj.type,
+								nodeClazz: obj.nodeClazz,
+								configuration: obj.configuration,
+								properties: {
+									left: activeObject.left + activeObject.width / 2 + obj.left || 0,
+									top: activeObject.top + activeObject.height / 2 + obj.top || 0,
+									iconName: obj.descriptor.icon,
+								},
+							};
+						});
+						this.copyToClipboard(JSON.stringify(objects.concat(links), null, '\t'));
+						// return true;
+					// }
+					this.clipboard = activeObject;
+					return this.clipboard;
 				// }
-			// }
-			this.clipboard = activeObject;
+			}
 			activeObject.clone((cloned: FabricObject) => {
-				// if (this.keyEvent.clipboard) {
-				// 	if (cloned.superType === 'node') {
-				// 		const node = {
-				// 			name: cloned.name,
-				// 			description: cloned.description,
-				// 			superType: cloned.superType,
-				// 			type: cloned.type,
-				// 			nodeClazz: cloned.nodeClazz,
-				// 			configuration: cloned.configuration,
-				// 			properties: {
-				// 				left: cloned.left || 0,
-				// 				top: cloned.top || 0,
-				// 				iconName: cloned.descriptor.icon,
-				// 			},
-				// 		};
-				// 		const objects = [node];
-				// 		this.copyToClipboard(JSON.stringify(objects, null, '\t'));
-				// 	} else {
-				// 		this.copyToClipboard(JSON.stringify(cloned.toObject(propertiesToInclude), null, '\t'));
-				// 	}
-				// } else {
+				if (this.keyEvent.clipboard) {
+					if (cloned.superType === 'node') {
+						const node = {
+							name: cloned.name,
+							description: cloned.description,
+							superType: cloned.superType,
+							type: cloned.type,
+							nodeClazz: cloned.nodeClazz,
+							configuration: cloned.configuration,
+							properties: {
+								left: cloned.left || 0,
+								top: cloned.top || 0,
+								iconName: cloned.descriptor.icon,
+							},
+						};
+						const objects = [node];
+						this.copyToClipboard(JSON.stringify(objects, null, '\t'));
+					} else {
+						this.copyToClipboard(JSON.stringify(cloned.toObject(propertiesToInclude), null, '\t'));
+					}
+				} else {
 					this.clipboard = cloned;
-					console.log("copy6", cloned);
-				// }
+                    if (handleClipboard) {
+                        handleClipboard(cloned);
+                    }
+				}
 			}, propertiesToInclude);
 		}
-		return activeObject;
+		return this.clipboard;
 	};
 
 	/**
@@ -1170,8 +1167,11 @@ class Handler implements HandlerOptions {
 			return false;
 		}
 		this.isCut = false;
+        console.log("paste -1");
 		if (clipboard.type === 'activeSelection') {
+            console.log("paste zero");
 			if (clipboard.getObjects().some((obj: any) => obj.superType === 'node')) {
+                console.log("paste one");
 				this.canvas.discardActiveObject();
 				const objects = [] as any[];
 				const linkObjects = [] as LinkOption[];
@@ -1214,6 +1214,7 @@ class Handler implements HandlerOptions {
 						clonedObj.on('mousedblclick', this.eventHandler.object.mousedblclick);
 					}
 					this.canvas.add(clonedObj);
+                    console.log("paste first");
 					this.objects = this.getObjects();
 					this.portHandler.create(clonedObj);
 					objects.push(clonedObj);
@@ -1244,6 +1245,7 @@ class Handler implements HandlerOptions {
 				if (!this.transactionHandler.active) {
 					this.transactionHandler.save('paste');
 				}
+                console.log("paste second");
 				this.canvas.setActiveObject(activeSelection);
 				this.canvas.renderAll();
 				return true;
@@ -1261,6 +1263,7 @@ class Handler implements HandlerOptions {
 				clonedObj.canvas = this.canvas;
 				clonedObj.forEachObject((obj: any) => {
 					obj.set('id', isCut ? obj.id : v4());
+                    console.log("paste activeselection");
 					this.canvas.add(obj);
 					if (obj.dblclick) {
 						obj.on('mousedblclick', this.eventHandler.object.mousedblclick);
@@ -1268,8 +1271,27 @@ class Handler implements HandlerOptions {
 				});
 			} else {
 				if (clonedObj.superType === 'node') {
+                    console.log("paste supertype is node");
 					clonedObj = clonedObj.duplicate();
 				}
+                console.log("paste not activeselection");
+                const { editable, objectOption } = this;
+                const option: any = {
+                    hasControls: editable,
+                    hasBorders: editable,
+                    selectable: editable,
+                    lockMovementX: !editable,
+                    lockMovementY: !editable,
+                    hoverCursor: !editable ? 'pointer' : 'move',
+                };
+                if (editable && this.workarea.layout === 'fullscreen') {
+                    option.scaleX = this.workarea.scaleX;
+                    option.scaleY = this.workarea.scaleY;
+                }
+                clonedObj.set({...objectOption, ...clonedObj, ...{
+                    container: this.container.id,
+				    editable,
+                }, ...option})
 				this.canvas.add(clonedObj);
 				if (clonedObj.dblclick) {
 					clonedObj.on('mousedblclick', this.eventHandler.object.mousedblclick);
@@ -1295,7 +1317,9 @@ class Handler implements HandlerOptions {
 			this.objects = this.getObjects();
 			if (onAdd) {
 				onAdd(clonedObj);
+                console.log("paste onAdd");
 			}
+            console.log("paste final");
 			clonedObj.setCoords();
 			this.canvas.setActiveObject(clonedObj);
 			this.canvas.requestRenderAll();

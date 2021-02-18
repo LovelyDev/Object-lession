@@ -792,7 +792,7 @@ class EventHandler {
 								this.handler.transactionHandler.save('paste');
 							}
 							this.handler.isCut = false;
-							this.handler.copy();
+							this.handler.copy(null);
 						}
 					} catch (error) {
 						console.error(error);
@@ -888,7 +888,7 @@ class EventHandler {
 				this.handler.selectAll();
 			} else if (this.handler.shortcutHandler.isCtrlC(e)) {
 				e.preventDefault();
-				this.handler.copy();
+				this.handler.copy(null);
 			} else if (this.handler.shortcutHandler.isCtrlV(e) && !clipboard) {
 				e.preventDefault();
 				this.handler.paste(null);

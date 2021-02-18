@@ -554,10 +554,11 @@ class ImageMapEditor extends Component {
 						</Menu.Item>
                         <Menu.Item
 							onClick={() => {
-                                const _clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
-                                console.log("just copied... clipboard", _clipboard);
-                                this.setState({clipboard: _clipboard});
-                                this.forceUpdate();
+                                this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy((_clipboard) => {
+                                    console.log("just copied... clipboard", _clipboard);
+                                    this.setState({clipboard: _clipboard});
+                                    this.forceUpdate();
+                                });
 							}}
 						>
 							{i18n.t('Copy')}
@@ -594,10 +595,11 @@ class ImageMapEditor extends Component {
 						</Menu.Item>
                         <Menu.Item
 							onClick={() => {
-                                const _clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
-                                console.log("just copied... clipboard", _clipboard);
-                                this.setState({clipboard: _clipboard});
-                                this.forceUpdate();
+                                this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy((_clipboard) => {
+                                    console.log("just copied... clipboard", _clipboard);
+                                    this.setState({clipboard: _clipboard});
+                                    this.forceUpdate();
+                                });
 							}}
 						>
 							{i18n.t('Copy')}
@@ -626,10 +628,11 @@ class ImageMapEditor extends Component {
 					</Menu.Item>
                     <Menu.Item
                         onClick={() => {
-                            const _clipboard = this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy();
-                            console.log("just copied... clipboard", _clipboard);
-                            this.setState({clipboard: _clipboard});
-                            this.forceUpdate();
+                            this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.copy((_clipboard) => {
+                                console.log("just copied... clipboard", _clipboard);
+                                this.setState({clipboard: _clipboard});
+                                this.forceUpdate();
+                            });
                         }}
                     >
                         {i18n.t('Copy')}
