@@ -763,7 +763,7 @@ class ImageMapEditor extends Component {
 			anchorEl.remove();
 			this.showLoading(false);
 		},
-		onChangeAnimations: (canvasRefId, animationsForCard) => {
+		onChangeAnimations: (key, changedAnimations) => {
 			if (!this.state.editing) {
 				this.changeEditing(true);
 			}
@@ -771,7 +771,7 @@ class ImageMapEditor extends Component {
 			this.setState({
 				animations: {
                     ...animations,
-                    [canvasRefId]: [...animationsForCard]
+                    [key]: [...changedAnimations]
                 }
 			});
 		},
@@ -927,23 +927,29 @@ class ImageMapEditor extends Component {
 				return false; 
 			})});
         } else if (type === 'duplicate') {
-			const { canvasRefs } = this.state;
+			const { canvasRefs, animations } = this.state;
 			let newCanvasRefs = [];
+            const id = v4();
 			for (let i = 0; i < canvasRefs.length; i++) {
 				const e = canvasRefs[i];
 				newCanvasRefs.push(e);
 				if (value === e.id) {
-					const id = v4();
 					const objects = e.canvasRef.handler.exportJSON().filter(obj => {
 						if (!obj.id) {
 							return false;
 						}
-						return true;
+						return true; 
 					});
 					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects});
 				}
 			}
-			this.setState({canvasRefs: [...newCanvasRefs]});
+			this.setState({
+                canvasRefs: [...newCanvasRefs],
+                animations: {
+                    ...animations,
+                    [id]: [...animations[value]]
+                }
+            });
 		}
 		setTimeout(() => {
 			this.forceUpdate();
@@ -1190,6 +1196,7 @@ class ImageMapEditor extends Component {
 					onChangeStyles={onChangeStyles}
 					onChangeDataSources={onChangeDataSources}
 					animations={animations[curCanvasRefId]}
+                    globalAnimations={animations['global']}
 					styles={styles}
                     dataSources={dataSources}
                     confActiveTab={confActiveTab}

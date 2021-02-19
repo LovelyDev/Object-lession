@@ -7,22 +7,33 @@ import Icon from '../../icon/Icon';
 class AnimationList extends Component {
 	static propTypes = {
 		animations: PropTypes.array,
+        globalAnimations: PropTypes.array,
 		onEdit: PropTypes.func,
 		onDelete: PropTypes.func,
 	};
 
 	render() {
-        const { animations, onEdit, onDelete } = this.props;
+        const { 
+            animations, 
+            globalAnimations,
+            onEdit, 
+            onDelete 
+        } = this.props;
+        const gCount = globalAnimations ? globalAnimations.length : 0;
+        let source = [];
+        if (globalAnimations && animations) {
+            source = [...globalAnimations, ...animations];
+        }
 		return (
 			<List
-				dataSource={animations}
+				dataSource={source}
 				renderItem={(animation, index) => {
 					const actions = [
 						<Button
 							className="rde-action-btn"
 							shape="circle"
 							onClick={() => {
-								onEdit(animation, index);
+                                onEdit(animation, index, animation.isGlobal);
 							}}
 						>
 							<Icon name="edit" />
@@ -31,7 +42,11 @@ class AnimationList extends Component {
 							className="rde-action-btn"
 							shape="circle"
 							onClick={() => {
-								onDelete(index);
+                                if (animation.isGlobal) {
+                                    onDelete('global', index);
+                                } else {
+                                    onDelete('', index - gCount);
+                                }
 							}}
 						>
 							<Icon name="times" />
