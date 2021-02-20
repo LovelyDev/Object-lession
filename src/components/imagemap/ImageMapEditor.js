@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce';
 import i18n from 'i18next';
 import { v4 } from 'uuid';
 import { toast } from 'react-toastify';
+import { reorder } from 'react-reorder';
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
 import ImageMapTitle from './ImageMapTitle';
@@ -872,7 +873,13 @@ class ImageMapEditor extends Component {
                 mlDisplay: false
             });
             this.forceUpdate();
-        } 
+        },
+        reorderCards: (pIndex, nIndex) => {
+            this.setState({
+                canvasRefs: reorder(this.state.canvasRefs, pIndex, nIndex)
+            })
+            this.forceUpdate();
+        }
 	};
 
 	shortcutHandlers = {
@@ -1032,6 +1039,7 @@ class ImageMapEditor extends Component {
             closeMediaLibrary,
             showMediaLibrary,
             bulkUpload,
+            reorderCards,
         } = this.handlers;
         const projectConf = {
             width,
@@ -1129,6 +1137,7 @@ class ImageMapEditor extends Component {
 					getPreviewImgById={this.getPreviewImgById}
 					pages={canvasRefs}
 					curPageId={curCanvasRefId}
+                    onReorder={reorderCards}
 				/>
 				<div className="rde-editor-canvas-container">
 					<div className="rde-editor-header-toolbar">
