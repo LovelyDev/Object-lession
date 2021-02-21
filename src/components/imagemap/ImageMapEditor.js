@@ -93,7 +93,7 @@ class ImageMapEditor extends Component {
             preview: false,
             loading: false,
             progress: 0,
-            animations: [],
+            animations: {},
             styles: [],
             dataSources: [],
             editing: false,
@@ -967,11 +967,12 @@ class ImageMapEditor extends Component {
 					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects});
 				}
 			}
+            console.log("animation being duplicated", Array.isArray(animations[value]));
 			this.setState({
                 canvasRefs: [...newCanvasRefs],
                 animations: {
                     ...animations,
-                    [id]: [...animations[value]]
+                    [id]: Array.isArray(animations[value]) ? [...animations[value]] : []
                 }
             });
 		}
