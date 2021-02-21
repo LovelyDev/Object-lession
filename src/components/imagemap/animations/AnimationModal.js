@@ -8,6 +8,7 @@ import {
 } from 'antd';
 import i18n from 'i18next';
 import { divide } from 'lodash';
+import { v4 } from 'uuid';
 import { Flex } from '../../flex';
 import Scrollbar from '../../common/Scrollbar';
 import AnimationStepList from './AnimationStepList'
@@ -16,7 +17,9 @@ import './AnimationModal.css'
 class AnimationModal extends Component {
     constructor(props) {
         super(props);
+        const id = v4();
         this.state = {
+            id,
             name: "",
             animationSteps: [],
             isGlobal: false,
@@ -26,13 +29,16 @@ class AnimationModal extends Component {
         if (!this.props.visible && nextProps.visible) {
             const { animation } = nextProps;
             if (typeof animation === 'undefined') {
+                const id = v4();
                 this.setState({
+                    id,
                     name: "",
                     animationSteps: [],
                     isGlobal: false
                 });
             } else {
                 this.setState({
+                    id: animation.id,
                     name: animation.name,
                     animationSteps: [...animation.animationSteps],
                     isGlobal: animation.isGlobal
@@ -98,6 +104,7 @@ class AnimationModal extends Component {
         const { visible, canvasRef } = this.props;
         const { onOk, onCancel } = this.props;
         const { 
+            id,
             animationSteps, 
             name,
             isGlobal,
@@ -112,7 +119,7 @@ class AnimationModal extends Component {
             })
         }
 		return (
-			<Modal visible={visible} onOk={onOk(name, animationSteps, isGlobal)} onCancel={onCancel}>
+			<Modal visible={visible} onOk={onOk(id, name, animationSteps, isGlobal)} onCancel={onCancel}>
                 <Flex className="animation-modal-body" flexDirection="column">
                     <div className="name-field">
                         <span>Name: </span>

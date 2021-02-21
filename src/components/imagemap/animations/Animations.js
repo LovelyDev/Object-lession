@@ -36,7 +36,7 @@ class Animations extends Component {
 	};
 
 	handlers = {
-		onOk: (name, animationSteps, isGlobal) => () => {
+		onOk: (id, name, animationSteps, isGlobal) => () => {
             if (name === '') {
                 alert("Name should not be empty");
                 return;
@@ -45,29 +45,30 @@ class Animations extends Component {
             const { curModalStatus, curEditNum, prevGlobal } = this.state;
             if (curModalStatus === 'add') {
                 if (isGlobal) {
-                    onChangeAnimations('global', [...this.props.globalAnimations, {name, animationSteps, isGlobal}]);
+                    onChangeAnimations('global', [...this.props.globalAnimations, { id, name, animationSteps, isGlobal }]);
                 } else {
-                    onChangeAnimations(canvasRefId, [...this.props.animations, {name, animationSteps, isGlobal}]);
+                    onChangeAnimations(canvasRefId, [...this.props.animations, { id, name, animationSteps, isGlobal }]);
                 }
             } else if (curModalStatus === 'edit') {
                 if (prevGlobal) {
                     if (isGlobal) {
                         let newAnimations = this.props.globalAnimations;
-                        newAnimations.splice(curEditNum, 1, { name, animationSteps, isGlobal });
+                        newAnimations.splice(curEditNum, 1, { id, name, animationSteps, isGlobal });
                         onChangeAnimations('global', [...newAnimations]);
                     } else {
                         this.handlers.onDelete('global', curEditNum);
-                        onChangeAnimations(canvasRefId, [...this.props.animations, {name, animationSteps, isGlobal}]);
+                        const changedAnime = { id, name, animationSteps, isGlobal };
+                        onChangeAnimations(canvasRefId, [...this.props.animations, changedAnime], 'global-uncheck', changedAnime);
                     }
                 } else {
                     if (isGlobal) {
                         const gCount = this.props.globalAnimations ? this.props.globalAnimations.length : 0;
                         this.handlers.onDelete('', curEditNum - gCount);
-                        onChangeAnimations('global', [...this.props.globalAnimations, {name, animationSteps, isGlobal}]);
+                        onChangeAnimations('global', [...this.props.globalAnimations, { id, name, animationSteps, isGlobal }]);
                     } else {
                         const gCount = this.props.globalAnimations ? this.props.globalAnimations.length : 0;
                         let newAnimations = this.props.animations;
-                        newAnimations.splice(curEditNum - gCount, 1, { name, animationSteps, isGlobal });
+                        newAnimations.splice(curEditNum - gCount, 1, { id, name, animationSteps, isGlobal });
                         onChangeAnimations(canvasRefId, [...newAnimations]);
                     }
                 }

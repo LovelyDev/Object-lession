@@ -718,6 +718,7 @@ class Handler implements HandlerOptions {
 		// Create canvas object
 		if (obj.type === 'image') {
 			createdObj = this.addImage(newOption);
+            console.log("image object created", createdObj);
 		} else if (obj.type === 'group') {
 			// TODO...
 			// Group add function needs to be fixed
@@ -728,6 +729,7 @@ class Handler implements HandlerOptions {
 			createdObj = this.fabricObjects[obj.type].create(newOption);
 		}
 		this.canvas.add(createdObj);
+        console.log("image object added to canvas", createdObj);
 		this.objects = this.getObjects();
 		if (!editable && !(obj.superType === 'element')) {
 			createdObj.on('mousedown', this.eventHandler.object.mousedown);
@@ -789,11 +791,14 @@ class Handler implements HandlerOptions {
 	 * @returns
 	 */
 	public addImage = (obj: FabricImage) => {
+        console.log("addImage is called");
 		const { objectOption } = this;
 		const { filters = [], ...otherOption } = obj;
 		const image = new Image();
 		if (obj.src) {
 			image.src = obj.src;
+            image.crossOrigin = "Anonymous";
+            console.log("crossOrigin is anonymous");
 		}
 		const createdObj = new fabric.Image(image, {
 			...objectOption,
@@ -803,6 +808,7 @@ class Handler implements HandlerOptions {
 			filters: this.imageHandler.createFilters(filters),
 		});
 		this.setImage(createdObj, obj.src || obj.file);
+        console.log("just before it returns the createdObj");
 		return createdObj;
 	};
 

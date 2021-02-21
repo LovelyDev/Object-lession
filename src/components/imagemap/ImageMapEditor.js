@@ -764,15 +764,32 @@ class ImageMapEditor extends Component {
 			anchorEl.remove();
 			this.showLoading(false);
 		},
-		onChangeAnimations: (key, changedAnimations) => {
+		onChangeAnimations: (key, changedAnimations, type, changedAnime) => {
 			if (!this.state.editing) {
 				this.changeEditing(true);
 			}
-            const { animations } = this.state;
-			this.setState({
+            const { animations, canvasRefs } = this.state;
+            let newAnimations = {...animations, [key]: [...changedAnimations]};
+            if (type === 'global-uncheck') {
+                const { id } = changedAnime;
+                console.log("changedAnime", changedAnime);
+                canvasRefs.forEach(canvasRef => {
+                    if (canvasRef.id == key) return;
+                    const { workarea: data } = canvasRef.canvasRef.handler;
+                    try {
+                        const cAnime = JSON.parse(data['correct-animation']);
+                        const wAnime = JSON.parse(data['wrong-animation']);
+                        if (cAnime.id === id || wAnime.id === id) {
+                            newAnimations[canvasRef.id] = [...newAnimations[canvasRef.id], changedAnime];
+                        }
+                    } catch (err) {
+
+                    }
+                })
+            }
+            this.setState({
 				animations: {
-                    ...animations,
-                    [key]: [...changedAnimations]
+                    ...newAnimations
                 }
 			});
 		},
