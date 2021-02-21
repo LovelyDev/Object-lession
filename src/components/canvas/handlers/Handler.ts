@@ -796,8 +796,8 @@ class Handler implements HandlerOptions {
 		const { filters = [], ...otherOption } = obj;
 		const image = new Image();
 		if (obj.src) {
-			image.src = obj.src;
-            image.crossOrigin = "Anonymous";
+			image.crossOrigin = "Anonymous";
+			image.src = obj.src;            
             console.log("crossOrigin is anonymous");
 		}
 		const createdObj = new fabric.Image(image, {
