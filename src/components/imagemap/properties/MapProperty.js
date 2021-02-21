@@ -21,6 +21,14 @@ export default {
                 return true;
             })
         }
+        console.log("animations", data['correct-animation'], data['wrong-animation']);
+        let cAnime = "", wAnime = "";
+        try {
+            cAnime = JSON.parse(data['correct-animation']).name;
+            wAnime = JSON.parse(data['wrong-animation']).name;
+        } catch (err) {
+
+        }
 		return (
 			<React.Fragment>
                 <Row className="card-attribute-row">
@@ -120,6 +128,7 @@ export default {
                     <Col span={15}>
                         <Form.Item colon={false}>
                             {getFieldDecorator('correct-animation', {
+                                valuePropName: 'value',
                                 initialValue: data['correct-animation'] || null,
                             })(<Select
                                 showSearch
@@ -129,7 +138,7 @@ export default {
                                     option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                                 }
                             >
-                                {animations ? animations.map(e => <Option value={e.name}>{e.name}</Option>) : null}
+                                {animations ? animations.map(e => <Option value={JSON.stringify({id: e.id, name: e.name})}>{e.name}</Option>) : null}
                             </Select>)}
                         </Form.Item>
                     </Col>
@@ -141,6 +150,7 @@ export default {
                     <Col span={15}>
                         <Form.Item colon={false}>
                             {getFieldDecorator('wrong-animation', {
+                                valuePropName: 'value',
                                 initialValue: data['wrong-animation'] || null,
                             })(<Select
                                 showSearch
@@ -150,7 +160,7 @@ export default {
                                     option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                                 }
                             >
-                                {animations ? animations.map(e => <Option value={e.name}>{e.name}</Option>) : null}
+                                {animations ? animations.map(e => <Option value={JSON.stringify({id: e.id, name: e.name})}>{e.name}</Option>) : null}
                             </Select>)}
                         </Form.Item>
                     </Col>

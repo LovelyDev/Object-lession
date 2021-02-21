@@ -458,7 +458,6 @@ class ImageMapItems extends Component {
             option.left += pOffset;
             option.top += pOffset;
             pOffset += 10;
-            console.log("imageItems", option);
             canvasRef.handler.add(option, centered);
         })
         this.setState({ mlDisplay: false });

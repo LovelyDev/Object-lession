@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
-import { Modal, Form, Input, List } from 'antd';
+import { 
+    Modal, 
+    Form, 
+    Input, 
+    List, 
+    Checkbox, 
+} from 'antd';
 import i18n from 'i18next';
 import { divide } from 'lodash';
+import { v4 } from 'uuid';
 import { Flex } from '../../flex';
 import Scrollbar from '../../common/Scrollbar';
 import AnimationStepList from './AnimationStepList'
@@ -10,23 +17,31 @@ import './AnimationModal.css'
 class AnimationModal extends Component {
     constructor(props) {
         super(props);
+        const id = v4();
         this.state = {
+            id,
             name: "",
-            animationSteps: []
+            animationSteps: [],
+            isGlobal: false,
         }
     }
     shouldComponentUpdate(nextProps, nextState) {
         if (!this.props.visible && nextProps.visible) {
             const { animation } = nextProps;
             if (typeof animation === 'undefined') {
+                const id = v4();
                 this.setState({
+                    id,
                     name: "",
-                    animationSteps: []
+                    animationSteps: [],
+                    isGlobal: false
                 });
             } else {
                 this.setState({
+                    id: animation.id,
                     name: animation.name,
-                    animationSteps: [...animation.animationSteps]
+                    animationSteps: [...animation.animationSteps],
+                    isGlobal: animation.isGlobal
                 })
             }
         }
@@ -88,7 +103,12 @@ class AnimationModal extends Component {
 	render() {
         const { visible, canvasRef } = this.props;
         const { onOk, onCancel } = this.props;
-        const { animationSteps, name } = this.state;
+        const { 
+            id,
+            animationSteps, 
+            name,
+            isGlobal,
+        } = this.state;
         let objects = null;
         if (canvasRef) {
             objects = canvasRef.handler.exportJSON().filter(obj => {
@@ -99,7 +119,7 @@ class AnimationModal extends Component {
             })
         }
 		return (
-			<Modal visible={visible} onOk={onOk(name, animationSteps)} onCancel={onCancel}>
+			<Modal visible={visible} onOk={onOk(id, name, animationSteps, isGlobal)} onCancel={onCancel}>
                 <Flex className="animation-modal-body" flexDirection="column">
                     <div className="name-field">
                         <span>Name: </span>
@@ -108,6 +128,13 @@ class AnimationModal extends Component {
                             style={{width: 200}}
                             value={name}
                             onChange={(e) => this.setState({ name: e.target.value })}
+                        />
+                    </div>
+                    <div className="global-checkbox-field">
+                        <span>Global: </span>
+                        <Checkbox
+                            checked={isGlobal}
+                            onChange={(e) => this.setState({ isGlobal: e.target.checked })}
                         />
                     </div>
                     <div className="rde-editor-items animation-step-list">

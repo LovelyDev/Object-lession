@@ -55,6 +55,7 @@ class ImageMapConfigurations extends Component {
 			selectedItem,
 			canvasRef,
 			animations,
+            globalAnimations,
 			styles,
 			dataSources,
 			onChangeAnimations,
@@ -70,6 +71,10 @@ class ImageMapConfigurations extends Component {
 		const className = classnames('rde-editor-configurations', {
 			minimize: collapse,
 		});
+        let animationsForCard = [];
+        if (globalAnimations && animations) {
+            animationsForCard = [...globalAnimations , ...animations];
+        }
 		return (
 			<div className={className}>
 				<CommonButton
@@ -90,13 +95,19 @@ class ImageMapConfigurations extends Component {
 						<ProjectProperties onChange={onChange} projectConf={projectConf} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cog" />} key="map">
-						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animations} projectId={projectId} />
+						<MapProperties onChange={onChange} canvasRef={canvasRef} animations={animationsForCard} projectId={projectId} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="cogs" />} key="node">
 						<NodeProperties onChange={onChange} selectedItem={selectedItem} canvasRef={canvasRef} />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="vine" prefix="fab" />} key="animations">
-						<Animations animations={animations} onChangeAnimations={onChangeAnimations} canvasRef={canvasRef} canvasRefId={canvasRefId}/>
+						<Animations 
+                            animations={animations} 
+                            globalAnimations={globalAnimations}
+                            onChangeAnimations={onChangeAnimations} 
+                            canvasRef={canvasRef} 
+                            canvasRefId={canvasRefId}
+                        />
 					</Tabs.TabPane>
 					<Tabs.TabPane tab={<Icon name="star-half-alt" />} key="styles">
 						<Styles styles={styles} onChangeStyles={onChangeStyles} />

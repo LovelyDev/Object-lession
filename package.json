@@ -78,6 +78,7 @@
 		"react-image-picker": "^1.1.1",
 		"react-json-view": "^1.19.1",
 		"react-media-library": "^1.0.3",
+		"react-reorder": "^3.0.0-alpha.7",
 		"react-router-dom": "^5.2.0",
 		"react-toastify": "^7.0.2",
 		"react-upload-gallery": "^0.2.0",
