@@ -61,6 +61,7 @@ export default {
                                 placeholder="Card Type"
                             >
                                 <Option value="select-answer">Select answer</Option>
+                                <Option value="enter-answer">Enter answer</Option>
                                 <Option value="drag-answer">Drag answer</Option>
                                 <Option value="drag-sum">Drag sum</Option>
                             </Select>)}
@@ -81,6 +82,44 @@ export default {
                         </Col>
                     </Row>
                 }
+                {data['card-type'] === 'enter-answer' && 
+                    <>
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Correct Answer</span>
+                        </Col>
+                        <Col span={15}>
+                            <Form.Item colon={false}>
+                                {getFieldDecorator('answer', {
+                                    initialValue: data['answer'] || null,
+                                })(<Input />)}
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Answer Field</span>
+                        </Col>
+                        <Col span={15}>
+                            <Form.Item colon={false}>
+                                {getFieldDecorator('answer-field', {
+                                    initialValue: data['answer-field'] || null,
+                                })(<Select
+                                    showSearch
+                                    placeholder="Select TextField"
+                                    optionFilterProp="children"
+                                    filterOption={(input, option) => 
+                                        option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                >
+                                    {objects ? objects.filter( obj => obj.type=='textbox').map(obj => <Option value={obj.object_name}>{obj.object_name}</Option>) : null}
+                                </Select>)}
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    </>
+                }
+                {data['card-type'] !== 'enter-answer' &&
                 <Row className="card-attribute-row">
                     <Col span={9}>
                         {data['card-type'] === 'select-answer' ?
@@ -121,6 +160,7 @@ export default {
                         }
                     </Col>
                 </Row>
+                }
                 <Row className="card-attribute-row">
                     <Col span={9}>
                         <span>Correct Animation</span>
