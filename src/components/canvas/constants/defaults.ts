@@ -39,7 +39,7 @@ export const workareaOption: Partial<WorkareaObject> = {
 	lockScalingY: true,
 	scaleX: 1,
 	scaleY: 1,
-	backgroundColor: '#fff',
+	backgroundColor: 'transparent',
 	hasBorders: false,
 	hasControls: false,
 	selectable: false,
@@ -95,5 +95,7 @@ export const propertiesToInclude = [
     'correct-animation',
     'wrong-animation',
     'posX',
-    'posY',
+	'posY',
+	'fontFamily',
+	'fontSize'
 ];

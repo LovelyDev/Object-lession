@@ -160,19 +160,21 @@ class ImageMapEditor extends Component {
                 });
                 this.changeEditing(false);
                 if (objectsList) {
+					console.log("objectsList", objectsList);
                     const newCanvasRefs = objectsList.map((page, i) => {
                         const data = page.objects.filter(obj => {
                             if (!obj.id) {
                                 return false;
                             }
                             return true;
-                        });
+						});
+						if (page.id === 'template') console.log("template objects", data);
                         return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
                     });
                     this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
                 } else {
                     const id = v4();
-                    this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id})
+                    this.setState({canvasRefs: [{id: 'template', canvasRef: null}, {id, canvasRef: null}], curCanvasRefId: id})
                 }
                 setTimeout(() => {
                     this.showLoading(false);
@@ -818,6 +820,7 @@ class ImageMapEditor extends Component {
 			const objectsList = canvasRefs.map(canvasRef => {
 				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
 					if (!obj.id) {
+						if (canvasRef.id === 'template') console.log("template object saving is rejected");
 						return false;
 					}
 					return true;
@@ -928,10 +931,14 @@ class ImageMapEditor extends Component {
     
     onPanelStateChange = (type, value) => {
         if (type === 'init') {
-			const id = v4();
-            this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id});
+			// const id = v4();
+            // this.setState({canvasRefs: [{id: 'template', canvasRef: null}, {id, canvasRef: null}], curCanvasRefId: id});
         } else if (type === 'page-change') {
-            this.setState({curCanvasRefId: value});
+			this.setState({curCanvasRefId: value});
+			if (value !== 'template') {
+				this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.canvas.discardActiveObject();
+				this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.canvas.requestRenderAll()
+			}
         } else if (type === 'add') {
 			const id = v4();
             const { canvasRefs } = this.state;
@@ -1174,9 +1181,15 @@ class ImageMapEditor extends Component {
                     {
                         canvasRefs.map(canvasRef => {
 						const { isDuplicated, objects } = canvasRef;
+						console.log("canvasRef info", canvasRef.id, isDuplicated, objects);
 						let props = {};
 						if(isDuplicated) {
-							props.onLoad = handler => handler.importJSON(objects)
+							props.onLoad = handler => handler.importJSON(objects);
+						}
+						if (canvasRef.id !== 'template') {
+							props.canvasOption = {
+								backgroundColor: 'transparent'
+							}
 						}
 						return <Canvas
 							ref={c => {
@@ -1184,7 +1197,7 @@ class ImageMapEditor extends Component {
 							}}
 							key={canvasRef.id}
                             className="rde-canvas"
-                            style={canvasRef.id === curCanvasRefId ? {zIndex: 0} : {zIndex: -1}}
+                            style={canvasRef.id === curCanvasRefId ? {zIndex: 2} : canvasRef.id === 'template' ? {zIndex: 1} : {zIndex: -1}}
 							minZoom={30}
 							maxZoom={500}
 							objectOption={defaultOption}
