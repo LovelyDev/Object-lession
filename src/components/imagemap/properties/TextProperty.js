@@ -48,7 +48,7 @@ export default {
 						)}
 					</Form.Item>
 				</Col>
-				<Col span={6}>
+				{/* <Col span={6}>
 					<Form.Item>
 						{getFieldDecorator('fontWeight', {
 							valuePropName: 'checked',
@@ -167,7 +167,7 @@ export default {
 							initialValue: data.charSpacing,
 						})(<Slider min={0} max={100} />)}
 					</Form.Item>
-				</Col>
+				</Col> */}
 			</React.Fragment>
 		);
 	},
