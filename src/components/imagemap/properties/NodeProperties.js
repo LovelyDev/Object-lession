@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Form, Collapse, List, Input, Checkbox, InputNumber, Row, Col, Select } from 'antd';
+import { Form, Collapse, List, Input, Checkbox, InputNumber, Row, Col, Select, Card } from 'antd';
 import i18n from 'i18next';
 
 import PropertyDefinition from './PropertyDefinition';
@@ -239,19 +239,16 @@ class NodeProperties extends Component {
                         </Flex>
                     )}
                     {selectedItem && (selectedItem.type === 'text' || selectedItem.type === 'textbox') &&
-                        <Collapse bordered={false}>
-                            <Panel
-                                key="text"
-                                header={PropertyDefinition.text.text.title}
-                                showArrow={true}
-                            >
-                                {PropertyDefinition.text.text.component.render(
-                                    canvasRef,
-                                    form,
-                                    selectedItem,
-                                )}
-                            </Panel>
-                        </Collapse>
+                        <Card
+                            key="text"
+                            title={PropertyDefinition.text.text.title}
+                        >
+                            {PropertyDefinition.text.text.component.render(
+                                canvasRef,
+                                form,
+                                selectedItem,
+                            )}
+                        </Card>
                     }
 					{/* <Collapse bordered={false}>
 						{selectedItem ? (

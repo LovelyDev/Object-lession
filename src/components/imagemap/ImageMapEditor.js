@@ -336,6 +336,12 @@ class ImageMapEditor extends Component {
 				}
 				return;
 			}
+			if (changedKey === 'fontSize') {
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('height', parseInt(changedValue) * 1.5);
+				console.log("fontSize changed", changedValue);
+				return;
+			}
 			if (changedKey === 'fontWeight') {
 				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue ? 'bold' : 'normal');
 				return;

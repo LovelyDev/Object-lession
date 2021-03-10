@@ -97,5 +97,5 @@ export const propertiesToInclude = [
     'posX',
 	'posY',
 	'fontFamily',
-	'fontSize'
+	'fontSize',
 ];
