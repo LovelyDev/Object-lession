@@ -238,21 +238,6 @@ class NodeProperties extends Component {
                             <List />
                         </Flex>
                     )}
-                    {selectedItem && (selectedItem.type === 'text' || selectedItem.type === 'textbox') &&
-                        <Collapse bordered={false}>
-                            <Panel
-                                key="text"
-                                header={PropertyDefinition.text.text.title}
-                                showArrow={true}
-                            >
-                                {PropertyDefinition.text.text.component.render(
-                                    canvasRef,
-                                    form,
-                                    selectedItem,
-                                )}
-                            </Panel>
-                        </Collapse>
-                    }
 					{/* <Collapse bordered={false}>
 						{selectedItem ? (
 							<div className="attribute-definition">
