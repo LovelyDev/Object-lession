@@ -180,6 +180,8 @@ class NodeProperties extends Component {
                                 >
                                     <Option value="empty" style={{color: "transparent"}}><span>&#8203;</span></Option>
                                     <Option value="quantity">Quantity</Option>
+                                    <Option value="correct-answer">Correct Answer</Option>
+                                    <Option value="wrong-answer">Wrong Answer</Option>
                                     <Option value="submit-button">Submit Button</Option>
                                     <Option value="drag-answer-destination">Answer Drag Placeholder</Option>
                                 </Select>)}
