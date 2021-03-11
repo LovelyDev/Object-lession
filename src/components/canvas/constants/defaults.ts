@@ -87,6 +87,7 @@ export const propertiesToInclude = [
     'return_on_drag', 
     'is_quantity',
     'is_quantity_type',
+	'answer-object',
     'quantity',
     'card-type',
     'answer-quantity',
