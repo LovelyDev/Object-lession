@@ -89,6 +89,16 @@ class NodeProperties extends Component {
                 selectedItem['posY'] = parseInt(selectedItem.top - workarea.top);
             }
         }
+
+        let objects = [];
+        if (canvasRef) {
+            objects = canvasRef.handler.exportJSON().filter(obj => {
+                if (!obj) return false;
+                if (typeof obj.object_name === 'undefined' || !obj.object_name || obj.object_name === '')
+                    return false;
+                return true;
+            })
+        }
         
 		return (
 			<Scrollbar>
@@ -171,10 +181,34 @@ class NodeProperties extends Component {
                                     <Option value="empty" style={{color: "transparent"}}><span>&#8203;</span></Option>
                                     <Option value="quantity">Quantity</Option>
                                     <Option value="submit-button">Submit Button</Option>
+                                    <Option value="drag-answer-destination">Answer Drag Placeholder</Option>
                                 </Select>)}
                             </Form.Item>
                         </Col>
                     </Row>
+                    {data.is_quantity_type === 'drag-answer-destination' &&                    
+                    <Row className="card-attribute-row">
+                        <Col span={9}>
+                            <span>Correct Answer Object</span>
+                        </Col>
+                        <Col span={15}>
+                            <Form.Item colon={false}>
+                                {getFieldDecorator('answer-object', {
+                                    initialValue: data['answer-object'] || null,
+                                })(<Select
+                                    showSearch
+                                    placeholder="Select Object"
+                                    optionFilterProp="children"
+                                    filterOption={(input, option) => 
+                                        option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                >
+                                    {objects ? objects.map(obj => <Option value={obj.object_name}>{obj.object_name}</Option>) : null}
+                                </Select>)}
+                            </Form.Item>
+                        </Col>
+                    </Row>                   
+                    }
                     {data.is_quantity_type === 'quantity' &&
                         <Row className="card-attribute-row">
                             <Col span={9}>
