@@ -70,11 +70,14 @@ class ImageMapConfigurations extends Component {
         const { onChangeTab, projectConf } = this.props;
 		const className = classnames('rde-editor-configurations', {
 			minimize: collapse,
-		});
+		});		
         let animationsForCard = [];
-        if (globalAnimations && animations) {
-            animationsForCard = [...globalAnimations , ...animations];
+        if (globalAnimations ) {
+            animationsForCard = [...animationsForCard, ...globalAnimations ];
         }
+		if (animations ) {
+            animationsForCard = [...animationsForCard, ...animations ];
+        } 
 		return (
 			<div className={className}>
 				<CommonButton
