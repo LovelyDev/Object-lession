@@ -683,10 +683,19 @@ class Handler implements HandlerOptions {
 	 */
 	public add = (obj: FabricObjectOption, centered = true, loaded = false) => {
 		const { editable, onAdd, gridOption, objectOption } = this;
+		let selectable, isEditable = editable;
+		if (obj.selectable) {
+			selectable = true;
+		} else if (obj.selectable === false) {
+			selectable = false;
+			isEditable = false;
+		} else {
+			selectable = editable;
+		}
 		const option: any = {
 			hasControls: editable,
 			hasBorders: editable,
-			selectable: editable,
+			selectable,
 			lockMovementX: !editable,
 			lockMovementY: !editable,
 			hoverCursor: !editable ? 'pointer' : 'move',
@@ -706,9 +715,9 @@ class Handler implements HandlerOptions {
 			obj,
 			{
 				container: this.container.id,
-				editable,
+				editable: isEditable,
 			},
-			option,
+			option
 		);
 		// Individually create canvas object
 		if (obj.superType === 'link') {

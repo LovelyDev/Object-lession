@@ -72,7 +72,7 @@ class ImageMapConfigurations extends Component {
 			minimize: collapse,
 		});
         let animationsForCard = [];
-        if (globalAnimations && animations) {
+        if (Array.isArray(globalAnimations) && Array.isArray(animations)) {
             animationsForCard = [...globalAnimations , ...animations];
         }
 		return (
