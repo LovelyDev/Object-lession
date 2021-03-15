@@ -506,6 +506,15 @@ class ImageMapEditor extends Component {
 			}
 			if (changedKey === 'file' || changedKey === 'src') {
 				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setImage(changedValue);
+				const { canvasRefs, curCanvasRefId } = this.state;
+				if (curCanvasRefId === 'template') {
+					canvasRefs.forEach(canvasRef => {
+						if (canvasRef.id === 'template') return;
+						if (!canvasRef.canvasRef.handler.workarea.src) {
+							canvasRef.canvasRef.handler.workareaHandler.setImage(changedValue);
+						}
+					})
+				}
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
@@ -1016,12 +1025,16 @@ class ImageMapEditor extends Component {
         } else if (type === 'add') {
 			const id = v4();
             const { canvasRefs } = this.state;
+			const tWorkarea = this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.workarea;
+			const wa = {
+				...tWorkarea
+			};
 			const tObjects = this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.exportJSON().filter(obj => {
 				if (!obj.id) return false;
 				return true;
 			})
 			tObjects.forEach(obj => obj.selectable = false);
-            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null, isDuplicated: true, objects: tObjects}]})
+            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null, isDuplicated: true, objects: [wa, ...tObjects]}]})
         } else if (type === 'delete') {
 			const id = value;
 			const { canvasRefs, curCanvasRefId } = this.state;
