@@ -49,8 +49,8 @@
 			},
 			"option": {
 				"type": "textbox",
-				"width": 80,
-                "height": 50,
+				"width": 180,
+                "height": 48,
                 "fill": "rgba(0,0,0,0)",
                 "stroke": "black",
                 "strokeWidth": 1,

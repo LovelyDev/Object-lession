@@ -6,7 +6,7 @@ export const canvasOption = {
 	height: 150,
 	selection: true,
 	defaultCursor: 'default',
-	backgroundColor: '#f3f3f3',
+	backgroundColor: '#f0f0f0',
 };
 
 export const keyEvent = {
@@ -95,6 +95,9 @@ export const propertiesToInclude = [
     'drag-destination',
     'correct-animation',
     'wrong-animation',
-    'posX',
-    'posY',
+    'posX',   
+	'posY',
+	'fontFamily',
+	'fontSize',
+	'selectable'
 ];

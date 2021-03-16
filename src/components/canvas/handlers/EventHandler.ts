@@ -240,6 +240,11 @@ class EventHandler {
 				video.player.setPlayerSize(width, height);
 			}
 		}
+		if (target.type === 'textbox') {
+			console.log("textbox scaling", target);
+			target.height = target.fontSize * 1.5;
+			target.scaleY = 1;
+		}
 	};
 
 	/**

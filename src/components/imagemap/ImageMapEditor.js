@@ -23,6 +23,7 @@ import axios from '../../config/axios';
 import { workarea } from '../../config/env';
 import '../../libs/fontawesome-5.2.0/css/all.css';
 import '../../styles/index.less';
+import { canvas } from 'react-dom-factories';
 const { getData, postData, putData, deleteData } = axios;
 
 const propertiesToInclude = [
@@ -100,7 +101,7 @@ class ImageMapEditor extends Component {
             descriptors: {},
             objects: undefined,
             canvasRefs: [{id: 0, canvasRef: null}],
-            curCanvasRefId: 0,
+            curCanvasRefId: 'template',
             projectName: "",
             confActiveTab: "project",
             width: 600,
@@ -136,7 +137,7 @@ class ImageMapEditor extends Component {
             getData(`/projects/${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
-                let objectsList = null, animations = [], styles = [], dataSources = [],
+                let objectsList = null, animations = {}, styles = [], dataSources = [],
                 width = 400,
                 height = 600,
                 coverImage = './images/sample/transparentBg.png';
@@ -159,16 +160,48 @@ class ImageMapEditor extends Component {
                     coverImage
                 });
                 this.changeEditing(false);
+				// if (canvasRef.id === 'template') {
+				// 	if (canvasRef.objects) {
+				// 		template = [...canvasRef.objects];
+				// 		newObjects = JSON.parse(JSON.stringify(template));
+				// 		template.forEach(obj => {
+				// 			if (obj.id === 'workarea') return;
+				// 			obj.selectable = false;
+				// 		})
+				// 	}
+				// }
+				// const { isDuplicated, objects } = canvasRef;
+				// if (!isDuplicated) {
+				// 	newObjects = [...template];
+				// } else if (canvasRef.id !== 'template') {
+				// 	newObjects = [...template, ...objects.slice(1, objects.length)];
+				// }
+				let template = [];
                 if (objectsList) {
+					console.log("objectsList", objectsList);
+					let newObjects = [];
                     const newCanvasRefs = objectsList.map((page, i) => {
                         const data = page.objects.filter(obj => {
                             if (!obj.id) {
                                 return false;
                             }
                             return true;
-                        });
-                        return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
+						});
+						if (page.id === 'template') {
+							template = [...data];
+							newObjects = JSON.parse(JSON.stringify(template));
+							template.forEach(obj => {
+								if (obj.id === 'workarea') return;
+								obj.selectable = false;
+							})
+						} else {
+							newObjects = [...template, ...data.slice(1, data.length)];
+						}
+                        return {id: page.id, canvasRef: null, isDuplicated: true, objects: newObjects}
                     });
+					if (objectsList[0].id !== 'template') {
+						newCanvasRefs.unshift({id: 'template', canvasRef: null})
+					}
                     this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
                 } else {
                     const id = v4();
@@ -187,7 +220,7 @@ class ImageMapEditor extends Component {
     }
 	canvasHandlers = {
 		onAdd: target => {
-			const { editing } = this.state;
+			const { editing, curCanvasRefId } = this.state;
 			this.forceUpdate();
 			if (!editing) {
 				this.changeEditing(true);
@@ -196,7 +229,20 @@ class ImageMapEditor extends Component {
 				this.canvasHandlers.onSelect(null);
 				return;
 			}
-            this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.select(target);
+			if (curCanvasRefId === 'template') {
+				const { canvasRefs } = this.state;
+				let obj;
+				canvasRefs.forEach(canvasRef => {
+					if (canvasRef.id === 'template') {
+						obj = canvasRef.canvasRef.handler.exportJSON().filter(obj => obj.id === target.id)[0];
+						obj.selectable = false;
+						return;
+					}
+					canvasRef.canvasRef.handler.importJSON([obj]);
+					
+				})
+			}
+			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.select(target);
 		},
 		onSelect: target => {
             const { selectedItem } = this.state;
@@ -227,18 +273,43 @@ class ImageMapEditor extends Component {
 				selectedItem: null,
 			});
 		},
-		onRemove: () => {
+		onRemove: (obj) => {
 			const { editing } = this.state;
 			if (!editing) {
 				this.changeEditing(true);
 			}
             this.canvasHandlers.onSelect(null);
+			const { curCanvasRefId, canvasRefs } = this.state;
+			if (curCanvasRefId === 'template') {
+				canvasRefs.forEach(canvasRef => {
+					if (canvasRef.id === 'template') return;
+					canvasRef.canvasRef.handler.removeById(obj.id);
+				})
+			}
 		},
-		onModified: debounce(() => {
+		onModified: debounce((obj) => {
 			const { editing } = this.state;
 			this.forceUpdate();
 			if (!editing) {
 				this.changeEditing(true);
+			}
+			const { curCanvasRefId, canvasRefs } = this.state;
+			if (curCanvasRefId === 'template') {
+				console.log("template object modifed", obj);
+				canvasRefs.forEach(canvasRef => {
+					if (canvasRef.id === 'template') return;
+					let mObj = canvasRef.canvasRef.handler.findById(obj.id);
+					console.log("found object by id", mObj);
+					if (mObj) {
+						mObj.set({
+							...obj,
+							selectable: false,
+							editable: false
+						});
+					}
+					canvasRef.canvasRef.handler.canvas.requestRenderAll();
+					
+				})
 			}
 		}, 300),
 		onZoom: zoom => {
@@ -332,6 +403,12 @@ class ImageMapEditor extends Component {
 				} else {
 					this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.setShadow(null);
 				}
+				return;
+			}
+			if (changedKey === 'fontSize') {
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set(changedKey, changedValue);
+				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.set('height', parseInt(changedValue) * 1.5);
+				console.log("fontSize changed", changedValue);
 				return;
 			}
 			if (changedKey === 'fontWeight') {
@@ -429,6 +506,15 @@ class ImageMapEditor extends Component {
 			}
 			if (changedKey === 'file' || changedKey === 'src') {
 				this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.workareaHandler.setImage(changedValue);
+				const { canvasRefs, curCanvasRefId } = this.state;
+				if (curCanvasRefId === 'template') {
+					canvasRefs.forEach(canvasRef => {
+						if (canvasRef.id === 'template') return;
+						if (!canvasRef.canvasRef.handler.workarea.src) {
+							canvasRef.canvasRef.handler.workareaHandler.setImage(changedValue);
+						}
+					})
+				}
 				return;
 			}
 			if (changedKey === 'width' || changedKey === 'height') {
@@ -737,7 +823,7 @@ class ImageMapEditor extends Component {
 			const { canvasRefs } = this.state;
 			const objectsList = canvasRefs.map(canvasRef => {
 				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
-					if (!obj.id) {
+					if (!obj.id || obj.selectable === false) {
 						return false;
 					}
 					return true;
@@ -817,7 +903,8 @@ class ImageMapEditor extends Component {
 			const { canvasRefs } = this.state;
 			const objectsList = canvasRefs.map(canvasRef => {
 				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
-					if (!obj.id) {
+					if (!obj.id || (obj.id !== 'workarea' && obj.selectable === false)) {
+						if (canvasRef.id === 'template') console.log("template object saving is rejected");
 						return false;
 					}
 					return true;
@@ -931,11 +1018,23 @@ class ImageMapEditor extends Component {
 			const id = v4();
             this.setState({canvasRefs: [{id, canvasRef: null}], curCanvasRefId: id});
         } else if (type === 'page-change') {
-            this.setState({curCanvasRefId: value});
+			const { curCanvasRefId } = this.state;
+			this.setState({curCanvasRefId: value});
+			this.state.canvasRefs[this.getCanvasRefById(curCanvasRefId)].canvasRef.handler.canvas.discardActiveObject();
+			this.state.canvasRefs[this.getCanvasRefById(curCanvasRefId)].canvasRef.handler.canvas.requestRenderAll()
         } else if (type === 'add') {
 			const id = v4();
             const { canvasRefs } = this.state;
-            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null}]})
+			const tWorkarea = this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.workarea;
+			const wa = {
+				...tWorkarea
+			};
+			const tObjects = this.state.canvasRefs[this.getCanvasRefById('template')].canvasRef.handler.exportJSON().filter(obj => {
+				if (!obj.id) return false;
+				return true;
+			})
+			tObjects.forEach(obj => obj.selectable = false);
+            this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null, isDuplicated: true, objects: [wa, ...tObjects]}]})
         } else if (type === 'delete') {
 			const id = value;
 			const { canvasRefs, curCanvasRefId } = this.state;
@@ -958,8 +1057,8 @@ class ImageMapEditor extends Component {
 				const e = canvasRefs[i];
 				newCanvasRefs.push(e);
 				if (value === e.id) {
-					const objects = e.canvasRef.handler.exportJSON().filter(obj => {
-						if (!obj.id) {
+					const objects = e.canvasRef.handler.canvas._objects.filter(obj => {
+						if (!obj.id || obj.id === 'workarea') {
 							return false;
 						}
 						return true; 
@@ -1062,7 +1161,7 @@ class ImageMapEditor extends Component {
             width,
             height,
             coverImage,
-        }
+		}
 		const action = (
 			<React.Fragment>
                 <CommonButton
@@ -1172,37 +1271,39 @@ class ImageMapEditor extends Component {
 					>
                     {
                         canvasRefs.map(canvasRef => {
-						const { isDuplicated, objects } = canvasRef;
-						let props = {};
-						if(isDuplicated) {
-							props.onLoad = handler => handler.importJSON(objects)
-						}
-						return <Canvas
-							ref={c => {
-								canvasRef.canvasRef = c;
-							}}
-							key={canvasRef.id}
-                            className="rde-canvas"
-                            style={canvasRef.id === curCanvasRefId ? {zIndex: 0} : {zIndex: -1}}
-							minZoom={30}
-							maxZoom={500}
-							objectOption={defaultOption}
-							propertiesToInclude={propertiesToInclude}
-							onModified={onModified}
-							onAdd={onAdd}
-							onRemove={onRemove}
-							onSelect={onSelect}
-							onZoom={onZoom}
-							onTooltip={onTooltip}
-							onClick={onClick}
-							onContext={onContext}
-                            onTransaction={onTransaction}
-                            onMouseDown={onMouseDown}
-							keyEvent={{
-								transaction: true,
-							}}
-							{...props}
-						/>})
+							const { isDuplicated, objects } = canvasRef;
+							console.log("canvasRef info", canvasRef.id, isDuplicated, objects);
+							let props = {};
+							if(isDuplicated) {
+								props.onLoad = handler => handler.importJSON(objects);
+							}
+							return <Canvas
+								ref={c => {
+									canvasRef.canvasRef = c;
+								}}
+								key={canvasRef.id}
+								className="rde-canvas"
+								style={canvasRef.id === curCanvasRefId ? {zIndex: 0} : {zIndex: -1}}
+								minZoom={30}
+								maxZoom={500}
+								objectOption={defaultOption}
+								propertiesToInclude={propertiesToInclude}
+								onModified={onModified}
+								onAdd={onAdd}
+								onRemove={onRemove}
+								onSelect={onSelect}
+								onZoom={onZoom}
+								onTooltip={onTooltip}
+								onClick={onClick}
+								onContext={onContext}
+								onTransaction={onTransaction}
+								onMouseDown={onMouseDown}
+								keyEvent={{
+									transaction: true,
+								}}
+								{...props}
+							/>
+						})
                     }
 					</div>
 					<div className="rde-editor-footer-toolbar">
