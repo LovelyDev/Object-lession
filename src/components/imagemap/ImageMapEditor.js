@@ -138,8 +138,8 @@ class ImageMapEditor extends Component {
             .then(res => {
                 const { project_json, name } = res.data;
                 let objectsList = null, animations = {}, styles = [], dataSources = [],
-                width = 400,
-                height = 600,
+                width = 600,
+                height = 400,
                 coverImage = './images/sample/transparentBg.png';
                 if (project_json) {
                     objectsList = project_json.objectsList;
@@ -188,14 +188,14 @@ class ImageMapEditor extends Component {
                             return true;
 						});
 						if (page.id === 'template') {
-							template = [...data];
+							template = [...data]
 							newObjects = JSON.parse(JSON.stringify(template));
 							template.forEach(obj => {
 								if (obj.id === 'workarea') return;
 								obj.selectable = false;
 							})
 						} else {
-							newObjects = [...template, ...data.slice(1, data.length)];
+							newObjects = [data[0], ...template.slice(1, template.length), ...data.slice(1, data.length)];
 						}
                         return {id: page.id, canvasRef: null, isDuplicated: true, objects: newObjects}
                     });
@@ -823,7 +823,7 @@ class ImageMapEditor extends Component {
 			const { canvasRefs } = this.state;
 			const objectsList = canvasRefs.map(canvasRef => {
 				const objects = canvasRef.canvasRef.handler.exportJSON().filter(obj => {
-					if (!obj.id || obj.selectable === false) {
+					if (!obj.id || (obj.id !== 'workarea' && obj.selectable === false)) {
 						return false;
 					}
 					return true;
@@ -1058,7 +1058,7 @@ class ImageMapEditor extends Component {
 				newCanvasRefs.push(e);
 				if (value === e.id) {
 					const objects = e.canvasRef.handler.canvas._objects.filter(obj => {
-						if (!obj.id || obj.id === 'workarea') {
+						if (!obj.id) {
 							return false;
 						}
 						return true; 
