@@ -19,7 +19,7 @@ class Page extends Component {
         const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick, index } = this.props;
         //const img = getPreviewImgById(id);
         return <div className="panel-list-item">
-            <span className="panel-list-item-card-number">{index + 1}</span>
+            <span className="panel-list-item-card-number">{index}</span>
             <div
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
@@ -48,6 +48,24 @@ class Page extends Component {
                 }
             </div>
             
+        </div>
+    }
+}
+
+class Template extends Component {
+    constructor(props) {
+        super(props);
+    }
+    render() {
+        const { active } = this.props;
+        const { onPageClick } = this.props;
+        return <div className="panel-list-item">
+            <div
+                className={`panel-list-item-page ${active ? "border-green" : "border-black"} template-item`}
+                onClick={() => onPageClick('template')}
+            >
+                Template
+            </div>
         </div>
     }
 }
@@ -114,7 +132,7 @@ class PageListPanel extends Component {
     }
     onReorder = (event, previousIndex, nextIndex, fromId, toId) => {
         const { onReorder } = this.props;
-        onReorder(previousIndex, nextIndex);
+        onReorder(previousIndex + 1, nextIndex + 1);
     }
     render() {
         const { pages, curPageId } = this.props;
@@ -131,6 +149,13 @@ class PageListPanel extends Component {
                             onClick={this.onAddClick}
                         />
                     </div>
+                    <div className="panel-template">
+                        <Template
+                            active={ curPageId === 'template' }
+                            onPageClick={this.onPageClick}
+                        />
+                    </div>
+                    <hr className="horizontal-line" />
                     <div>
                         <Reorder
                             reorderId="my-list" // Unique ID that is used internally to track this list (required)
@@ -149,19 +174,21 @@ class PageListPanel extends Component {
                             disableContextMenus={true} // Disable context menus when holding on touch devices (optional), defaults to true
                         >
                             {
-                                pages.map((page,index) => <li key={page.id}>
-                                    <Page
-                                        index={index}
-                                        id={page.id}
-                                        key={page.id}
-                                        active={ page.id === curPageId }
-                                        onPageClick={this.onPageClick}
-                                        onDeleteClick={this.onDeleteClick}
-                                        pageCount={pages.length}
-                                        getPreviewImgById={getPreviewImgById}
-                                        onDuplicateClick={this.onDuplicateClick}
-                                    />
-                                </li>)
+                                pages.slice(1, pages.length).map((page,index) => {
+                                    return <li key={page.id}>
+                                        <Page
+                                            index={index + 1}
+                                            id={page.id}
+                                            key={page.id}
+                                            active={ page.id === curPageId }
+                                            onPageClick={this.onPageClick}
+                                            onDeleteClick={this.onDeleteClick}
+                                            pageCount={pages.length}
+                                            getPreviewImgById={getPreviewImgById}
+                                            onDuplicateClick={this.onDuplicateClick}
+                                        />
+                                    </li>
+                                })
                             }
                         </Reorder>
                     </div>
