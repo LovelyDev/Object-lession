@@ -16,7 +16,7 @@ class Page extends Component {
         super(props);
     }
     render() {
-        const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick, index } = this.props;
+        const { id, active, onPageClick, onDeleteClick, pageCount, getPreviewImgById, onDuplicateClick, index, preview } = this.props;
         //const img = getPreviewImgById(id);
         return <div className="panel-list-item">
             <span className="panel-list-item-card-number">{index}</span>
@@ -24,8 +24,8 @@ class Page extends Component {
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"}`}
                 onClick={() => onPageClick(id)}
             >
-                
-                 {id}
+                <img className="panel-list-item-page-preview" src={preview} alt=""/>
+                 {/* {id} */}
             </div>
             <div className="panel-list-item-btn-group">
                 {(pageCount !== 1) &&
@@ -57,14 +57,14 @@ class Template extends Component {
         super(props);
     }
     render() {
-        const { active } = this.props;
+        const { active, preview } = this.props;
         const { onPageClick } = this.props;
         return <div className="panel-list-item">
             <div
                 className={`panel-list-item-page ${active ? "border-green" : "border-black"} template-item`}
                 onClick={() => onPageClick('template')}
             >
-                Template
+                <img className="panel-list-item-page-preview" src={preview} alt=""/>
             </div>
         </div>
     }
@@ -153,6 +153,7 @@ class PageListPanel extends Component {
                         <Template
                             active={ curPageId === 'template' }
                             onPageClick={this.onPageClick}
+                            preview={ pages[0].preview }
                         />
                     </div>
                     <hr className="horizontal-line" />
@@ -186,6 +187,7 @@ class PageListPanel extends Component {
                                             pageCount={pages.length}
                                             getPreviewImgById={getPreviewImgById}
                                             onDuplicateClick={this.onDuplicateClick}
+                                            preview={page.preview}
                                         />
                                     </li>
                                 })
