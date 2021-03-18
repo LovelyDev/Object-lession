@@ -557,7 +557,6 @@ class ImageMapEditor extends Component {
 			if (changedKey === 'width' || changedKey === 'height') {
                 const { canvasRefs } = this.state;
                 canvasRefs.forEach(canvasRef => {
-					if (canvasRef.id === 'template') return;
                     canvasRef.canvasRef.handler.originScaleToResize(
                         canvasRef.canvasRef.handler.workarea,
                         allValues.width,
