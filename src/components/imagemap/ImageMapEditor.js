@@ -5,6 +5,7 @@ import i18n from 'i18next';
 import { v4 } from 'uuid';
 import { toast } from 'react-toastify';
 import { reorder } from 'react-reorder';
+import axios from 'axios';
 import ImageMapFooterToolbar from './ImageMapFooterToolbar';
 import ImageMapItems from './ImageMapItems';
 import ImageMapTitle from './ImageMapTitle';
@@ -19,12 +20,12 @@ import {
 } from '../common';
 import Canvas from '../canvas/Canvas';
 import PageListPanel from './PageListPanel/PageListPanel';
-import axios from '../../config/axios';
-import { workarea } from '../../config/env';
+import axiosInstance from '../../config/axios';
+import { workarea, API_URL } from '../../config/env';
 import '../../libs/fontawesome-5.2.0/css/all.css';
 import '../../styles/index.less';
 import { canvas } from 'react-dom-factories';
-const { getData, postData, putData, deleteData } = axios;
+const { getData, postData, putData, deleteData } = axiosInstance;
 
 const propertiesToInclude = [
 	'id',
@@ -205,19 +206,36 @@ class ImageMapEditor extends Component {
                     this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
                 } else {
                     const id = v4();
-                    this.setState({canvasRefs: [{id, canvasRef: null, preview: null}], curCanvasRefId: id})
+                    this.setState({canvasRefs: [{id: 'template', canvasRef: null, preview: null}, {id, canvasRef: null, preview: null}], curCanvasRefId: 'template'})
                 }
+				getData(`/images?project=${projectId}`)
+				.then(res => {
+					const { canvasRefs } = this.state;
+					canvasRefs.forEach(canvasRef => {
+						const images = res.data;
+						for (let i = 0; i < images.length; i++) {
+							const e = images[i];
+							const { image_file } = e;
+							if (!image_file) break;
+							const { name, url } = image_file;
+							if (canvasRef.id === name.split('.')[0]) {
+								canvasRef.preview = url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "");
+							}
+						}
+					})
+					this.forceUpdate();
+				})
                 setTimeout(() => {
                     this.showLoading(false);
-                    const { canvasRefs } = this.state;
-					canvasRefs.forEach(canvasRef => {
-						canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
-					})
 					this.forceUpdate();
                 }, 500);
             })
         }
 	}
+	getAllImages = () => {
+        const { projectId } = this.props;
+        
+    }
     removeMenu = (target) => () => {
         console.log("removeMenu", target);
         target.parentNode.parentNode.remove();
@@ -290,11 +308,33 @@ class ImageMapEditor extends Component {
             this.canvasHandlers.onSelect(null);
 			const { curCanvasRefId, canvasRefs } = this.state;
 			if (curCanvasRefId === 'template') {
+				const { _objects: objs } = obj;
 				canvasRefs.forEach(canvasRef => {
 					if (canvasRef.id === 'template') return;
-					canvasRef.canvasRef.handler.removeById(obj.id);
-					canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+					if (objs) {
+						objs.forEach(e => {
+							let mObj = canvasRef.canvasRef.handler.findById(e.id);
+							if (mObj) {
+								canvasRef.canvasRef.handler.canvas.remove(mObj);
+							}
+						});
+						canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+					} else {
+						let mObj = canvasRef.canvasRef.handler.findById(obj.id);
+						console.log("found object by id", mObj);
+						if (mObj) {
+							canvasRef.canvasRef.handler.canvas.remove(mObj);
+							canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+						}
+					}
+					canvasRef.canvasRef.handler.canvas.requestRenderAll();
 				})
+				// canvasRefs.forEach(canvasRef => {
+				// 	if (canvasRef.id === 'template') return;
+				// 	const mObj = canvasRef.canvasRef.handler.findById(obj.id);
+				// 	canvasRef.canvasRef.handler.canvas.remove(mObj);
+				// 	canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+				// })
 			}
 			let curCanvasRef = this.state.canvasRefs[this.getCanvasRefById(curCanvasRefId)];
 			if (curCanvasRef.canvasRef) {
@@ -311,21 +351,36 @@ class ImageMapEditor extends Component {
 			const { curCanvasRefId, canvasRefs } = this.state;
 			if (curCanvasRefId === 'template') {
 				console.log("template object modifed", obj);
+				const { _objects: objs } = obj;
 				canvasRefs.forEach(canvasRef => {
 					if (canvasRef.id === 'template') return;
-					let mObj = canvasRef.canvasRef.handler.findById(obj.id);
-					console.log("found object by id", mObj);
-					if (mObj) {
-						mObj.set({
-							...obj,
-							selectable: false,
-							editable: false
+					if (objs) {
+						objs.forEach(e => {
+							let mObj = canvasRef.canvasRef.handler.findById(e.id);
+							if (mObj) {
+								mObj.set({
+									...e,
+									selectable: false,
+									editable: false
+								});
+							}
 						});
 						canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+					} else {
+						let mObj = canvasRef.canvasRef.handler.findById(obj.id);
+						console.log("found object by id", mObj);
+						if (mObj) {
+							mObj.set({
+								...obj,
+								selectable: false,
+								editable: false
+							});
+							canvasRef.preview = canvasRef.canvasRef.handler.canvas.toDataURL("image/png");
+						}
 					}
 					canvasRef.canvasRef.handler.canvas.requestRenderAll();
-					
 				})
+				
 			}
 			let curCanvasRef = this.state.canvasRefs[this.getCanvasRefById(curCanvasRefId)];
 			if (curCanvasRef.canvasRef) {
@@ -954,6 +1009,42 @@ class ImageMapEditor extends Component {
                 this.showLoading(false);
                 return;
             }
+			const dataURLtoFile = (dataurl, filename) => {
+ 
+				var arr = dataurl.split(','),
+					mime = arr[0].match(/:(.*?);/)[1],
+					bstr = atob(arr[1]), 
+					n = bstr.length, 
+					u8arr = new Uint8Array(n);
+					
+				while(n--){
+					u8arr[n] = bstr.charCodeAt(n);
+				}
+				
+				return new File([u8arr], filename, {type:mime});
+			}
+			canvasRefs.forEach(canvasRef => {
+				if (canvasRef.preview) {
+					const file = dataURLtoFile(canvasRef.preview, `${canvasRef.id}.png`);
+					const form = new FormData();
+					// send file 
+					form.append('files.image_file', file);
+					form.append('data', JSON.stringify({
+						project: projectId
+					}));    
+					const token = localStorage.getItem('Token');
+					axios.post(
+						`${API_URL}/images`,
+						form,
+						{
+							headers: {'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
+						}
+					).then(res => {
+					})
+					.catch(error => {
+					})
+				}
+			})
             putData(`/projects/${projectId}`, {
                 name: this.state.projectName,
                 project_json: exportDatas
@@ -964,7 +1055,6 @@ class ImageMapEditor extends Component {
                 this.showLoading(false);
                 toast.success("Save project successfully");
             })
-            
         },
         onChangeConfTab: (activeKey) => {
             this.setState({ confActiveTab: activeKey });

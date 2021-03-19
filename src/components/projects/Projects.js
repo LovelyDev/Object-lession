@@ -20,6 +20,7 @@ class Project extends Component {
         const { id } = this.props;
         getData(`/projects/${id}`)
         .then(res => {
+            if (!res.data.project_json) return;
             const { coverImage } = res.data.project_json;
             console.log("coverImage is fetched", coverImage);
             if (!coverImage) return;
