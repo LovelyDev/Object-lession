@@ -340,6 +340,7 @@ class ImageMapEditor extends Component {
 			if (curCanvasRef.canvasRef) {
 				curCanvasRef.preview = curCanvasRef.canvasRef.handler.canvas.toDataURL("image/png");
 			}
+			curCanvasRef.canvasRef.canvas.requestRenderAll();
 			this.forceUpdate();
 		},
 		onModified: debounce((obj) => {
@@ -1024,7 +1025,7 @@ class ImageMapEditor extends Component {
 				return new File([u8arr], filename, {type:mime});
 			}
 			canvasRefs.forEach(canvasRef => {
-				if (canvasRef.preview) {
+				if (canvasRef.preview && canvasRef.preview.startsWith('data:image/png;base64')) {
 					const file = dataURLtoFile(canvasRef.preview, `${canvasRef.id}.png`);
 					const form = new FormData();
 					// send file 
