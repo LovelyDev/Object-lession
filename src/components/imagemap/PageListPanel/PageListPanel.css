@@ -66,5 +66,12 @@
 
 .horizontal-line {
     background-color: #d0c9c9;
-    margin: 30px 15px 30px 0;
+    margin: 20px 15px 30px 0;
+}
+
+.template-text {
+    text-align: center;
+    font-size: larger;
+    font-weight: bolder;
+    margin-left: -26px;
 }

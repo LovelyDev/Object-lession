@@ -138,7 +138,7 @@ class ImageMapEditor extends Component {
             getData(`/projects/${projectId}`)
             .then(res => {
                 const { project_json, name } = res.data;
-                let objectsList = null, animations = {}, styles = [], dataSources = [],
+                let objectsList = null, animations = {}, styles = [], dataSources = [], preview_images = {},
                 width = 600,
                 height = 400,
                 coverImage = './images/sample/transparentBg.png';
@@ -150,6 +150,7 @@ class ImageMapEditor extends Component {
                     width = project_json.width || 600;
                     height = project_json.height || 400;
                     coverImage = project_json.coverImage || './images/sample/transparentBg.png';
+					preview_images = project_json.preview_images;
                 }
                 this.setState({
                     animations,
@@ -203,28 +204,15 @@ class ImageMapEditor extends Component {
 					if (objectsList[0].id !== 'template') {
 						newCanvasRefs.unshift({id: 'template', canvasRef: null, preview: null})
 					}
-                    this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
+                    this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id === 'template' ? objectsList[1].id : objectsList[0].id});
                 } else {
                     const id = v4();
-                    this.setState({canvasRefs: [{id: 'template', canvasRef: null, preview: null}, {id, canvasRef: null, preview: null}], curCanvasRefId: 'template'})
+                    this.setState({canvasRefs: [{id: 'template', canvasRef: null, preview: null}, {id, canvasRef: null, preview: null}], curCanvasRefId: id})
                 }
-				getData(`/images?project=${projectId}`)
-				.then(res => {
+				if (preview_images) {
 					const { canvasRefs } = this.state;
-					canvasRefs.forEach(canvasRef => {
-						const images = res.data;
-						for (let i = 0; i < images.length; i++) {
-							const e = images[i];
-							const { image_file } = e;
-							if (!image_file) break;
-							const { name, url } = image_file;
-							if (canvasRef.id === name.split('.')[0]) {
-								canvasRef.preview = url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "");
-							}
-						}
-					})
-					this.forceUpdate();
-				})
+					canvasRefs.forEach(canvasRef => canvasRef.preview = preview_images[canvasRef.id])
+				}
                 setTimeout(() => {
                     this.showLoading(false);
 					this.forceUpdate();
@@ -867,7 +855,7 @@ class ImageMapEditor extends Component {
 								return {id: page.id, canvasRef: null, isDuplicated: true, objects: data}
                             });
                             console.log("projects upload done");
-							this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[0].id});
+							this.setState({canvasRefs: [...newCanvasRefs], curCanvasRefId: objectsList[1].id});
 						}
 						setTimeout(() => {
 							this.forceUpdate();
@@ -975,7 +963,7 @@ class ImageMapEditor extends Component {
 		onSaveImage: () => {
 			this.state.canvasRefs[this.getCanvasRefById(this.state.curCanvasRefId)].canvasRef.handler.saveCanvasImage();
         },
-        onSaveProject: () => {
+        onSaveProject: async () => {
             this.showLoading(true);
 			const { canvasRefs } = this.state;
 			const objectsList = canvasRefs.map(canvasRef => {
@@ -996,15 +984,6 @@ class ImageMapEditor extends Component {
                 height,
                 coverImage
             } = this.state;
-			const exportDatas = {
-				objectsList,
-				animations,
-				styles,
-                dataSources,
-                width,
-                height,
-                coverImage
-            };
             const { projectId } = this.props;
             if (!projectId) {
                 this.showLoading(false);
@@ -1024,28 +1003,43 @@ class ImageMapEditor extends Component {
 				
 				return new File([u8arr], filename, {type:mime});
 			}
-			canvasRefs.forEach(canvasRef => {
-				if (canvasRef.preview && canvasRef.preview.startsWith('data:image/png;base64')) {
-					const file = dataURLtoFile(canvasRef.preview, `${canvasRef.id}.png`);
-					const form = new FormData();
-					// send file 
-					form.append('files.image_file', file);
-					form.append('data', JSON.stringify({
-						project: projectId
-					}));    
-					const token = localStorage.getItem('Token');
-					axios.post(
-						`${API_URL}/images`,
-						form,
-						{
-							headers: {'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
-						}
-					).then(res => {
-					})
-					.catch(error => {
-					})
+			let preview_images = {};
+			for (const canvasRef of canvasRefs) {
+				if (canvasRef.preview) {
+					if (canvasRef.preview.startsWith('data:image/png;base64')) {
+						const file = dataURLtoFile(canvasRef.preview, `${projectId}-${canvasRef.id}.png`);
+						const form = new FormData();
+						// send file 
+						form.append('files.image_file', file);
+						form.append('data', JSON.stringify({
+							project: projectId,
+							image_type: 'PREVIEW'
+						}));    
+						const token = localStorage.getItem('Token');
+						const res = await axios.post(
+							`${API_URL}/images`,
+							form,
+							{
+								headers: {'Content-Type': 'multipart/form-data', 'Authorization': `Bearer ${token}` }
+							}
+						);
+						const { image_file } = res.data;
+						preview_images[canvasRef.id] = image_file.url.replace("https", "http").replace("s3.us-west-2.amazonaws.com/", "");	
+					} else if (canvasRef.preview.startsWith('http')) {
+						preview_images[canvasRef.id] = canvasRef.preview;
+					}
 				}
-			})
+			}
+			const exportDatas = {
+				objectsList,
+				animations,
+				styles,
+                dataSources,
+                width,
+                height,
+                coverImage,
+				preview_images
+            };
             putData(`/projects/${projectId}`, {
                 name: this.state.projectName,
                 project_json: exportDatas
@@ -1149,7 +1143,7 @@ class ImageMapEditor extends Component {
             this.setState({canvasRefs: [...canvasRefs, {id, canvasRef: null, isDuplicated: true, objects: [wa, ...tObjects]}]})
 			setTimeout(() => {
 				const { canvasRefs } = this.state;
-				canvasRefs[this.getCanvasRefById(id)].preview = canvasRefs[this.getCanvasRefById(id)].canvasRef.handler.canvas.toDataURL("image/png");
+				canvasRefs[this.getCanvasRefById(id)].preview = canvasRefs[this.getCanvasRefById('template')].preview;
 				this.forceUpdate();
 			}, 500)
         } else if (type === 'delete') {
@@ -1180,7 +1174,7 @@ class ImageMapEditor extends Component {
 						}
 						return true; 
 					});
-					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects});
+					newCanvasRefs.push({id, canvasRef: e.canvasRef, isDuplicated: true, objects, preview: e.preview});
 				}
 			}
 			this.setState({
@@ -1190,11 +1184,11 @@ class ImageMapEditor extends Component {
                     [id]: Array.isArray(animations[value]) ? [...animations[value]] : []
                 }
             });
-			setTimeout(() => {
-				const { canvasRefs } = this.state;
-				canvasRefs[this.getCanvasRefById(id)].preview = canvasRefs[this.getCanvasRefById(id)].canvasRef.handler.canvas.toDataURL("image/png");
-				this.forceUpdate();
-			}, 500)
+			// setTimeout(() => {
+			// 	const { canvasRefs } = this.state;
+			// 	canvasRefs[this.getCanvasRefById(id)].preview = ;
+			// 	this.forceUpdate();
+			// }, 500)
 		}
 		setTimeout(() => {
 			this.forceUpdate();

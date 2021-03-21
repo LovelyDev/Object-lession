@@ -33,7 +33,11 @@ class MapProperties extends Component {
                 'correct-answer': data['correct-answer'],
                 'drag-destination': data['drag-destination'],
                 'correct-animation': data['correct-animation'],
-                'wrong-animation': data['wrong-animation']
+                'wrong-animation': data['wrong-animation'],
+                'answer-quantity': data['answer-quantity'],
+                'wrong-answer-message': data['wrong-answer-message'],
+                'answer-field': data['answer-field'],
+                'answer': data['answer']
             })
         }
         return true;

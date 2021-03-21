@@ -156,6 +156,7 @@ class PageListPanel extends Component {
                             preview={ pages[0].preview }
                         />
                     </div>
+                    <div className="template-text">Template</div>
                     <hr className="horizontal-line" />
                     <div>
                         <Reorder

@@ -3,6 +3,7 @@ import { Form, Input, Select, Radio, Row, Col, InputNumber } from 'antd';
 import i18n from 'i18next';
 import './MapProperty.css';
 const { Option } = Select;
+const { TextArea } = Input;
 
 export default {
 	render(canvasRef, form, data, animations) {
@@ -69,18 +70,34 @@ export default {
                     </Col>
                 </Row>
                 {data['card-type'] === 'drag-sum' &&
-                    <Row className="card-attribute-row">
-                        <Col span={9}>
-                            <span>Answer Quantity</span>
-                        </Col>
-                        <Col span={15}>
-                            <Form.Item colon={false}>
-                                {getFieldDecorator('answer-quantity', {
-                                    initialValue: data['answer-quantity'] || null,
-                                })(<Input />)}
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    <>
+                        <Row className="card-attribute-row">
+                            <Col span={9}>
+                                <span>Answer Quantity</span>
+                            </Col>
+                            <Col span={15}>
+                                <Form.Item colon={false}>
+                                    {getFieldDecorator('answer-quantity', {
+                                        initialValue: data['answer-quantity'] || null,
+                                    })(<Input />)}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Row className="card-attribute-row">
+                            <span>Wrong Answer Message</span>
+                        </Row>
+                        <Row className="card-attribute-row">
+                            <Col span={4}>
+                            </Col>
+                            <Col span={20}>
+                                <Form.Item colon={false}>
+                                    {getFieldDecorator('wrong-answer-message', {
+                                        initialValue: data['wrong-answer-message'] || null,
+                                    })(<TextArea />)}
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </>
                 }
                 {data['card-type'] === 'enter-answer' && 
                     <>

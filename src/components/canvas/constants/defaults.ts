@@ -99,5 +99,6 @@ export const propertiesToInclude = [
 	'posY',
 	'fontFamily',
 	'fontSize',
-	'selectable'
+	'selectable',
+	'wrong-answer-message',
 ];
