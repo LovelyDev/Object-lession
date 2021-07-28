@@ -1,12 +1,1 @@
-# Dependency directories
-node_modules/
-public/js
-public/index.html
-public/fonts
-dist/
-lib/
-.vscode/
-docs/docs
-docs/fonts
-docs/images
-docs/js
+node_modules
